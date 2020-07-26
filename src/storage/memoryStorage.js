@@ -107,7 +107,7 @@ export const MemoryStorage = (verbose) => {
    * Remove Component from an entity
    * @param {any }entityId - EntityId to remove component from
    * @param {string} componentName - Component Name
-   * @returns {boolean|*}
+   * @returns {boolean} - True if successfull
    */
   const removeEntityComponent = (entityId, componentName) => {
     _log(`Remove Component ${componentName} to Entity ${entityId}`)
