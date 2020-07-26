@@ -28,9 +28,20 @@ export const ComponentManager = (storage, verbose) => {
       ) {
         continue;
       }
+      // 'any' type of data is not validated.
+      if(v.type == 'any'){
+        continue;
+      }
       //we have a value so we test
-      if (!Validate[validateFunctionName](componentValue[k])) {
-        _log(`${componentValue[k]} failed the validation ${validateFunctionName}`);
+      let args = [];
+      if(v.type == 'enum') {
+        args.push(v.allowed);
+      }
+      if(v.type == 'array'){
+        args.push(v.childType);
+      }
+      if (!Validate[validateFunctionName](componentValue[k],...args)) {
+        _log(`${k} => ${componentValue[k]} failed the validation ${validateFunctionName}`);
         return false;
       }
     }
@@ -47,35 +58,60 @@ export const ComponentManager = (storage, verbose) => {
     return true;
   };
 
-  const add = (entityId, ComponentId, value = {}) => {
-    if (_validate(ComponentId, value)) {
-      const c = _registeredComponents.get(ComponentId);
+  /**
+   * Add a Component to an existing entity
+   * @param {any} entityId - Entity Id
+   * @param {string} ComponentId - Component type to add
+   * @param {object} value - Object following the data structure of component to pass initial values to component
+   * @returns {boolean} True if succesfull else false
+   */
+  const add = (entityId, ComponentName, value = {}) => {
+    if (_validate(ComponentName, value)) {
+      const c = _registeredComponents.get(ComponentName);
       const defaultValues = Object.fromEntries(Object.entries(c).map(([k, v]) => {
         return [k, v.default];
       }));
-      return _storage.addEntityComponent(entityId, ComponentId, Object.assign(defaultValues, value));
+      _storage.addEntityComponent(entityId, ComponentName, Object.assign(defaultValues, value));
+      return true;
     } else {
-      _log(`Component ${ComponentId} could not added to ${entityId} due to fail validation`);
+      _log(`Component ${ComponentName} could not added to ${entityId} due to fail validation`);
       return false;
     }
   };
 
-  const remove = (entityId, ComponentId) => {
-    return _storage.removeEntityComponent(entityId, ComponentId);
+  /**
+   * Remove a component from an existing Entity
+   * @param {any} entityId - Entity Id
+   * @param {string} ComponentName - Component to remove
+   * @returns {boolean} - True if successfull else false
+   */
+  const remove = (entityId, ComponentName) => {
+    return _storage.removeEntityComponent(entityId, ComponentName);
   };
 
-  const register = (component) => {
-    if(!component.hasOwnProperty('name')) {
+  /**
+   * Register a new component type
+   * @param {object} componentSchema
+   * @returns {boolean} - True if successfull, else false
+   */
+  const register = (componentSchema) => {
+    if(!componentSchema.hasOwnProperty('name')) {
       return false;
     }
-    _log(`Registering ${component.name} Component`)
-    const data = component.data || {};
-    return _registeredComponents.set(component.name, data);
+    _log(`Registering ${componentSchema.name} Component`)
+    const data = componentSchema.data || {};
+    _registeredComponents.set(componentSchema.name, data);
+    return true;
   };
+
+  const list = () => {
+    return new Map(_registeredComponents)
+  }
 
   return {
     add,
     remove,
     register,
+    list
   };
 };
