@@ -21,7 +21,7 @@ export const isEnum = (value, allowed) => {
   return allowed.includes(value)
 }
 
-export const isArrayOf = (value, type) => {
+export const isArray = (value, type) => {
   //check if array
   const isArray = Array.isArray(value);
   if(!isArray)  {
@@ -42,6 +42,7 @@ export const isArrayOf = (value, type) => {
       }, true)
       break;
     case 'mixed' : res = true; break;
+    case 'any': res = true; break;
     default:
       throw new TypeError(`Type ${type} not supported in Array`);
   }
