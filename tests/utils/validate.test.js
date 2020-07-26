@@ -1,4 +1,4 @@
-import {isString, isArrayOf, isNumber, isEnum, isAny} from './validate';
+import {isString, isArray, isNumber, isEnum, isAny} from '../../src/utils/validate';
 
 test('`test` is a anything but undefined', () => {
   expect(isAny('test')).toBe(true);
@@ -55,30 +55,30 @@ test('Object is not valid for enum', () => {
 
 //testing array
 test('`[]` is an array of every type', () => {
-  expect(isArrayOf([],'string')).toBe(true);
-  expect(isArrayOf([],'number')).toBe(true);
-  expect(isArrayOf([],'mixed')).toBe(true);
+  expect(isArray([],'string')).toBe(true);
+  expect(isArray([],'number')).toBe(true);
+  expect(isArray([],'mixed')).toBe(true);
 
 });
 test('`[1,"test"]` is a mixed array', () => {
-  expect(isArrayOf([1, 'test'], 'mixed')).toBe(true);
+  expect(isArray([1, 'test'], 'mixed')).toBe(true);
 });
 test('`[1,2.234,3]` is an array of number', () => {
-  expect(isArrayOf([1,2.234,3], 'number')).toBe(true);
+  expect(isArray([1,2.234,3], 'number')).toBe(true);
 });
 test('`["test","someother"]` is an array of string', () => {
-  expect(isArrayOf(['test','someother'], 'string')).toBe(true);
+  expect(isArray(['test','someother'], 'string')).toBe(true);
 });
 test('`test` and `1` are not an array', () => {
-  expect(isArrayOf('test', 'string')).toBe(false);
-  expect(isArrayOf(1, 'string')).toBe(false);
+  expect(isArray('test', 'string')).toBe(false);
+  expect(isArray(1, 'string')).toBe(false);
 });
 test('`["test", 1]` is not an array of string', () => {
-  expect(isArrayOf(['test', 1], 'string')).toBe(false);
+  expect(isArray(['test', 1], 'string')).toBe(false);
 });
 test('`["test", 1]` is not an array of number', () => {
-  expect(isArrayOf(['test', 1], 'number')).toBe(false);
+  expect(isArray(['test', 1], 'number')).toBe(false);
 });
 test('`object` is not a supported type for array', () => {
-  expect(() => isArrayOf(['test', 1], 'object')).toThrow(TypeError);
+  expect(() => isArray(['test', 1], 'object')).toThrow(TypeError);
 });
