@@ -1,4 +1,4 @@
-import {isString, isArrayOf} from './utils/validate';
+import {isString, isArray} from './utils/validate';
 
 export const SystemManager = (storage, verbose) => {
 
@@ -27,7 +27,7 @@ export const SystemManager = (storage, verbose) => {
       return false
     }
 
-    if(!isArrayOf(system.query, 'string')){
+    if(!isArray(system.query, 'string')){
       _log(`System ${system.name} does not have a correct query. A query must be an array of string.`)
     }
 
