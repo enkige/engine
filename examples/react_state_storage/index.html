@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="../../build/enki-engine.script.js"></script>
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+  import {ReactStateStorageFactory} from './storage.js';
+
+  console.log('Get Enki Engine and display basic export from library');
+  //create instance of Engine
+
+
+
+  const e = React.createElement;
+
+  function App() {
+    const [count, setCount] = React.useState(0);
+    const [entities, setEntities] = React.useState(new Set());
+    const [componentMap, setComponentMap] = React.useState(new Map());
+    const [entityComponents, setEntityComponents] = React.useState(new Map());
+
+    //create the Storage function
+    const Storage = ReactStateStorageFactory(
+      {value: entities, set: setEntities},
+      {value: componentMap, set: setComponentMap},
+      {value: entityComponents, set: setEntityComponents},
+    );
+
+    //setting up Enki Engine
+    const eng = EnkiEngine.default({mode: 'debug', storageType: 'custom', storageInstance: Storage});
+    //get entity manager
+    const entityMgr = eng.EntityManager;
+
+    // click event handler
+    const addEnt = () => {
+      entityMgr.add();
+      setCount(count + 1);
+    };
+    const removeEnt = () => {
+      const c = count - 1;
+      if(c < 0) {
+        console.log('No entities to remove');
+        return;
+      }
+      // get entities
+      setCount(c);
+      // get first entity
+      const e = entityMgr.getAll().next().value;
+      //remove first entity
+      entityMgr.remove(e);
+    };
+
+    return e('h1', null, `Number of entities stored in state : ${entities.size}`,
+      e('br'),
+      e('button', {onClick: addEnt}, 'Add entity'),
+      e('br'),
+      e('button', {onClick: removeEnt}, 'Remove entity'),
+    );
+  }
+
+  ReactDOM.render(
+    e(App),
+    document.getElementById('root'),
+  );
+
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="../../build/enki-engine.script.js"></script>
+
+</head>
+<body>
+<p>For a vanila javascript usagte of the ECS engine, please do the following:</p>
+<pre>
+    <code>
+        `&lt;script src="./enki-engine.script.js" &gt;``&lt;/script&gt;`
+        `&lt;script&gt;`
+            //the library is available through the variable `EnkiEngine`
+            var myEngineInstance = EnkiEngine.default();
+        `&lt;/script&gt;`
+
+    </code>
+</pre>
+<p>This html file include a basic usage.<br/>
+    It create a single entity with one component and 1 system.<br/>
+    Debug mode is enabled to output the different steps happening in the engine.
+    Open your developer console to see them.</p>
+<script>
+  console.log('Get Enki Engine and display basic export from library');
+  //create instance of Engine
+  const eng = EnkiEngine.default({mode: 'debug'});
+  //get entity manager
+  const entityMgr = eng.EntityManager;
+  //add a new entity
+  const myEntity = entityMgr.add();
+  //get component manager
+  const componentMgr = eng.ComponentManager;
+  //add component to entity
+  componentMgr.add(myEntity, 'Position');
+
+</script>
+</body>
+</html>
