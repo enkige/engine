@@ -849,11 +849,26 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
         if (typeof componentValue[k] === 'undefined' && (typeof v.optional !== 'undefined' && v.optional === true || typeof v["default"] !== 'undefined')) {
           continue;
+        } // 'any' type of data is not validated.
+
+
+        if (v.type == 'any') {
+          continue;
         } //we have a value so we test
 
 
-        if (!Validate[validateFunctionName](componentValue[k])) {
-          _log("".concat(componentValue[k], " failed the validation ").concat(validateFunctionName));
+        var args = [];
+
+        if (v.type == 'enum') {
+          args.push(v.allowed);
+        }
+
+        if (v.type == 'array') {
+          args.push(v.childType);
+        }
+
+        if (!Validate[validateFunctionName].apply(Validate, [componentValue[k]].concat(args))) {
+          _log("".concat(k, " => ").concat(componentValue[k], " failed the validation ").concat(validateFunctionName));
 
           return false;
         }
@@ -874,12 +889,20 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
       return true;
     };
+    /**
+     * Add a Component to an existing entity
+     * @param {any} entityId - Entity Id
+     * @param {string} ComponentId - Component type to add
+     * @param {object} value - Object following the data structure of component to pass initial values to component
+     * @returns {boolean} True if succesfull else false
+     */
 
-    var add = function add(entityId, ComponentId) {
+
+    var add = function add(entityId, ComponentName) {
       var value = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-      if (_validate(ComponentId, value)) {
-        var c = _registeredComponents.get(ComponentId);
+      if (_validate(ComponentName, value)) {
+        var c = _registeredComponents.get(ComponentName);
 
         var defaultValues = Object.fromEntries(Object.entries(c).map(function (_ref) {
           var _ref2 = _slicedToArray(_ref, 2),
@@ -888,33 +911,57 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
           return [k, v["default"]];
         }));
-        return _storage.addEntityComponent(entityId, ComponentId, Object.assign(defaultValues, value));
+
+        _storage.addEntityComponent(entityId, ComponentName, Object.assign(defaultValues, value));
+
+        return true;
       } else {
-        _log("Component ".concat(ComponentId, " could not added to ").concat(entityId, " due to fail validation"));
+        _log("Component ".concat(ComponentName, " could not added to ").concat(entityId, " due to fail validation"));
 
         return false;
       }
     };
+    /**
+     * Remove a component from an existing Entity
+     * @param {any} entityId - Entity Id
+     * @param {string} ComponentName - Component to remove
+     * @returns {boolean} - True if successfull else false
+     */
 
-    var remove = function remove(entityId, ComponentId) {
-      return _storage.removeEntityComponent(entityId, ComponentId);
+
+    var remove = function remove(entityId, ComponentName) {
+      return _storage.removeEntityComponent(entityId, ComponentName);
     };
+    /**
+     * Register a new component type
+     * @param {object} componentSchema
+     * @returns {boolean} - True if successfull, else false
+     */
 
-    var register = function register(component) {
-      if (!component.hasOwnProperty('name')) {
+
+    var register = function register(componentSchema) {
+      if (!componentSchema.hasOwnProperty('name')) {
         return false;
       }
 
-      _log("Registering ".concat(component.name, " Component"));
+      _log("Registering ".concat(componentSchema.name, " Component"));
 
-      var data = component.data || {};
-      return _registeredComponents.set(component.name, data);
+      var data = componentSchema.data || {};
+
+      _registeredComponents.set(componentSchema.name, data);
+
+      return true;
+    };
+
+    var list = function list() {
+      return new Map(_registeredComponents);
     };
 
     return {
       add: add,
       remove: remove,
-      register: register
+      register: register,
+      list: list
     };
   };
 
@@ -1334,7 +1381,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
      * Remove Component from an entity
      * @param {any }entityId - EntityId to remove component from
      * @param {string} componentName - Component Name
-     * @returns {boolean|*}
+     * @returns {boolean} - True if successfull
      */
 
 
@@ -1438,7 +1485,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         return false;
       }
 
-      if (!(0, _validate2.isArrayOf)(system.query, 'string')) {
+      if (!(0, _validate2.isArray)(system.query, 'string')) {
         _log("System ".concat(system.name, " does not have a correct query. A query must be an array of string."));
       }
 
@@ -1578,7 +1625,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
-  _exports.isArrayOf = _exports.isEnum = _exports.isString = _exports.isAny = _exports.isNumber = void 0;
+  _exports.isArray = _exports.isEnum = _exports.isString = _exports.isAny = _exports.isNumber = void 0;
 
   var isNumber = function isNumber(value) {
     return !isNaN(value);
@@ -1612,7 +1659,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
   _exports.isEnum = isEnum;
 
-  var isArrayOf = function isArrayOf(value, type) {
+  var isArray = function isArray(value, type) {
     //check if array
     var isArray = Array.isArray(value);
 
@@ -1640,6 +1687,10 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         res = true;
         break;
 
+      case 'any':
+        res = true;
+        break;
+
       default:
         throw new TypeError("Type ".concat(type, " not supported in Array"));
     }
@@ -1647,7 +1698,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     return res;
   };
 
-  _exports.isArrayOf = isArrayOf;
+  _exports.isArray = isArray;
 });
 
 /***/ })
