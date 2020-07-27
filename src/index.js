@@ -3,10 +3,6 @@ import { ComponentManager } from './componentManager.js';
 import { SystemManager } from './systemManager.js';
 import { Storage } from './storage/index.js';
 
-// import predefined components and systems
-import {Components} from './components';
-import {Systems} from './systems';
-
 /**
  * Create an Enki Engine instance
  * @param {string} storageType - The type of storage to use, either 'MemoryStorage' or 'custom'
@@ -32,16 +28,8 @@ const Engine = ({storageType = 'MemoryStorage', mode = 'production', storageInst
   const entityMgr = EntityManager(storage, verbose);
 
   const componentMgr = ComponentManager(storage, verbose);
-  //register predefined Components
-  for(let c of Object.values(Components)) {
-    componentMgr.register(c)
-  }
 
   const systemMgr = SystemManager(storage, verbose);
-  //register predefined Systems
-  for(let s of Object.values(Systems)) {
-    systemMgr.register(s)
-  }
 
   return {
     EntityManager: entityMgr,
