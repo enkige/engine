@@ -51,7 +51,7 @@
       // get entities
       setCount(c);
       // get first entity
-      const e = entityMgr.getAll().next().value;
+      const e = entityMgr.list().next().value;
       //remove first entity
       entityMgr.remove(e);
     };
