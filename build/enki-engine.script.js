@@ -970,74 +970,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 /***/ }),
 
-/***/ "./src/components/index.js":
-/*!*********************************!*\
-  !*** ./src/components/index.js ***!
-  \*********************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
-  if (true) {
-    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports, __webpack_require__(/*! ./position */ "./src/components/position.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-  } else { var mod; }
-})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports, _position) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.Components = void 0;
-  var Components = {
-    Position: _position.Position
-  };
-  _exports.Components = Components;
-});
-
-/***/ }),
-
-/***/ "./src/components/position.js":
-/*!************************************!*\
-  !*** ./src/components/position.js ***!
-  \************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
-  if (true) {
-    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-  } else { var mod; }
-})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.Position = void 0;
-  var Position = {
-    name: 'Position',
-    data: {
-      x: {
-        type: 'number',
-        "default": 0
-      },
-      y: {
-        type: 'number',
-        "default": 0
-      }
-    }
-  };
-  _exports.Position = Position;
-});
-
-/***/ }),
-
 /***/ "./src/entityManager.js":
 /*!******************************!*\
   !*** ./src/entityManager.js ***!
@@ -1062,33 +994,54 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
   var EntityManager = function EntityManager(storage) {
     var _storage = storage;
+    /**
+     * Add a new entity
+     * @returns {string} - Entity Id
+     */
 
-    var add = function add(template) {
+    var add = function add() {
       var entity = (0, _uuid.v4)();
 
       _storage.addEntity(entity);
 
       return entity;
     };
+    /**
+     * Remove an entity
+     * @param {*} entity - Entity Id to remove
+     * @returns {boolean} - True if successful, else false
+     */
+
 
     var remove = function remove(entity) {
-      _storage.removeEntity(entity);
+      return _storage.removeEntity(entity);
     };
+    /**
+     * Retrieve an entity
+     * @param {*} id - Entity Id
+     * @returns {*} - Entity Id if it exists. Undefined if it does not exists
+     */
+
 
     var get = function get(id) {
       _storage.getEntity(id);
 
       return id;
     };
+    /**
+     * Retrieve all entities stored
+     * @returns {Iterator} - Iterator that list all entities
+     */
 
-    var getAll = function getAll() {
+
+    var list = function list() {
       return _storage.getEntities().values();
     };
 
     return {
       add: add,
       get: get,
-      getAll: getAll,
+      list: list,
       remove: remove
     };
   };
@@ -1107,12 +1060,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
   if (true) {
-    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports, __webpack_require__(/*! ./entityManager.js */ "./src/entityManager.js"), __webpack_require__(/*! ./componentManager.js */ "./src/componentManager.js"), __webpack_require__(/*! ./systemManager.js */ "./src/systemManager.js"), __webpack_require__(/*! ./storage/index.js */ "./src/storage/index.js"), __webpack_require__(/*! ./components */ "./src/components/index.js"), __webpack_require__(/*! ./systems */ "./src/systems/index.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports, __webpack_require__(/*! ./entityManager.js */ "./src/entityManager.js"), __webpack_require__(/*! ./componentManager.js */ "./src/componentManager.js"), __webpack_require__(/*! ./systemManager.js */ "./src/systemManager.js"), __webpack_require__(/*! ./storage/index.js */ "./src/storage/index.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
   } else { var mod; }
-})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports, _entityManager, _componentManager, _systemManager, _index, _components, _systems) {
+})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports, _entityManager, _componentManager, _systemManager, _index) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -1155,20 +1108,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     }
 
     var entityMgr = (0, _entityManager.EntityManager)(storage, verbose);
-    var componentMgr = (0, _componentManager.ComponentManager)(storage, verbose); //register predefined Components
-
-    for (var _i = 0, _Object$values = Object.values(_components.Components); _i < _Object$values.length; _i++) {
-      var c = _Object$values[_i];
-      componentMgr.register(c);
-    }
-
-    var systemMgr = (0, _systemManager.SystemManager)(storage, verbose); //register predefined Systems
-
-    for (var _i2 = 0, _Object$values2 = Object.values(_systems.Systems); _i2 < _Object$values2.length; _i2++) {
-      var s = _Object$values2[_i2];
-      systemMgr.register(s);
-    }
-
+    var componentMgr = (0, _componentManager.ComponentManager)(storage, verbose);
+    var systemMgr = (0, _systemManager.SystemManager)(storage, verbose);
     return {
       EntityManager: entityMgr,
       SystemManager: systemMgr,
@@ -1473,24 +1414,24 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
     var _validate = function _validate(system) {
       //check that system is a function with the correct prototype
-      if (!_typeof(system) === 'function' || !system.hasOwnProperty('query') || !system.hasOwnProperty('name')) {
+      if (!_typeof(system) === 'function' || !system.hasOwnProperty('query')) {
         _log('Trying to register a system that is either not a function or does not have a name and query defined');
-
-        return false;
-      }
-
-      if (!(0, _validate2.isString)(system.name)) {
-        _log("The name of a system must be a string");
 
         return false;
       }
 
       if (!(0, _validate2.isArray)(system.query, 'string')) {
         _log("System ".concat(system.name, " does not have a correct query. A query must be an array of string."));
+
+        return false;
       }
 
       return true;
     };
+    /**
+     * Execute all registered systems
+     */
+
 
     var execute = function execute() {
       // loop through all systems
@@ -1519,12 +1460,20 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         _iterator.f();
       }
     };
+    /**
+     * Register a new system
+     * @param {function} system - A system to be registered
+     * @returns {boolean} - True if successful else false
+     */
+
 
     var register = function register(system) {
       if (_validate(system)) {
         _log("Registering ".concat(system.name, " System"));
 
         _registeredSystems.set(system.name, system);
+
+        return true;
       } else {
         return false;
       }
@@ -1537,70 +1486,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
   };
 
   _exports.SystemManager = SystemManager;
-});
-
-/***/ }),
-
-/***/ "./src/systems/index.js":
-/*!******************************!*\
-  !*** ./src/systems/index.js ***!
-  \******************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
-  if (true) {
-    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports, __webpack_require__(/*! ./move */ "./src/systems/move.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-  } else { var mod; }
-})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports, _move) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.Systems = void 0;
-  var Systems = {
-    Move: _move.Move
-  };
-  _exports.Systems = Systems;
-});
-
-/***/ }),
-
-/***/ "./src/systems/move.js":
-/*!*****************************!*\
-  !*** ./src/systems/move.js ***!
-  \*****************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
-  if (true) {
-    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-  } else { var mod; }
-})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports) {
-  "use strict";
-
-  Object.defineProperty(_exports, "__esModule", {
-    value: true
-  });
-  _exports.Move = void 0;
-
-  var Move = function Move(components, log) {
-    var position = components.get('Position');
-    position.x += 10;
-    position.y += 10;
-    return components;
-  };
-
-  _exports.Move = Move;
-  Move.query = ['Position'];
 });
 
 /***/ }),

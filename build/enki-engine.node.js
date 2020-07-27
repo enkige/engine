@@ -629,47 +629,6 @@ const ComponentManager = (storage, verbose) => {
 
 /***/ }),
 
-/***/ "./src/components/index.js":
-/*!*********************************!*\
-  !*** ./src/components/index.js ***!
-  \*********************************/
-/*! exports provided: Components */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Components", function() { return Components; });
-/* harmony import */ var _position__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./position */ "./src/components/position.js");
-
-
-const Components = {
-  Position: _position__WEBPACK_IMPORTED_MODULE_0__["Position"],
-}
-
-
-/***/ }),
-
-/***/ "./src/components/position.js":
-/*!************************************!*\
-  !*** ./src/components/position.js ***!
-  \************************************/
-/*! exports provided: Position */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Position", function() { return Position; });
-const Position = {
-  name: 'Position',
-  data: {
-    x: {type: 'number', default: 0},
-    y: {type: 'number', default: 0},
-  },
-};
-
-
-/***/ }),
-
 /***/ "./src/entityManager.js":
 /*!******************************!*\
   !*** ./src/entityManager.js ***!
@@ -686,29 +645,47 @@ __webpack_require__.r(__webpack_exports__);
 const EntityManager = (storage) => {
   const _storage = storage;
 
-  const add = (template) => {
+  /**
+   * Add a new entity
+   * @returns {string} - Entity Id
+   */
+  const add = () => {
     const entity = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
     _storage.addEntity(entity);
     return entity;
   };
 
+  /**
+   * Remove an entity
+   * @param {*} entity - Entity Id to remove
+   * @returns {boolean} - True if successful, else false
+   */
   const remove = (entity) => {
-    _storage.removeEntity(entity);
+    return _storage.removeEntity(entity);
   };
 
+  /**
+   * Retrieve an entity
+   * @param {*} id - Entity Id
+   * @returns {*} - Entity Id if it exists. Undefined if it does not exists
+   */
   const get = (id) => {
     _storage.getEntity(id);
     return id;
   };
 
-  const getAll = () => {
+  /**
+   * Retrieve all entities stored
+   * @returns {Iterator} - Iterator that list all entities
+   */
+  const list = () => {
     return _storage.getEntities().values();
   };
 
   return {
     add,
     get,
-    getAll,
+    list,
     remove,
   };
 };
@@ -729,14 +706,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _componentManager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./componentManager.js */ "./src/componentManager.js");
 /* harmony import */ var _systemManager_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./systemManager.js */ "./src/systemManager.js");
 /* harmony import */ var _storage_index_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./storage/index.js */ "./src/storage/index.js");
-/* harmony import */ var _components__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./components */ "./src/components/index.js");
-/* harmony import */ var _systems__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./systems */ "./src/systems/index.js");
 
 
-
-
-
-// import predefined components and systems
 
 
 
@@ -765,16 +736,8 @@ const Engine = ({storageType = 'MemoryStorage', mode = 'production', storageInst
   const entityMgr = Object(_entityManager_js__WEBPACK_IMPORTED_MODULE_0__["EntityManager"])(storage, verbose);
 
   const componentMgr = Object(_componentManager_js__WEBPACK_IMPORTED_MODULE_1__["ComponentManager"])(storage, verbose);
-  //register predefined Components
-  for(let c of Object.values(_components__WEBPACK_IMPORTED_MODULE_4__["Components"])) {
-    componentMgr.register(c)
-  }
 
   const systemMgr = Object(_systemManager_js__WEBPACK_IMPORTED_MODULE_2__["SystemManager"])(storage, verbose);
-  //register predefined Systems
-  for(let s of Object.values(_systems__WEBPACK_IMPORTED_MODULE_5__["Systems"])) {
-    systemMgr.register(s)
-  }
 
   return {
     EntityManager: entityMgr,
@@ -986,22 +949,22 @@ const SystemManager = (storage, verbose) => {
 
   const _validate = (system) => {
     //check that system is a function with the correct prototype
-    if(!typeof(system) === 'function' || !system.hasOwnProperty('query') || !system.hasOwnProperty('name')) {
+    if(!typeof(system) === 'function' || !system.hasOwnProperty('query')) {
       _log('Trying to register a system that is either not a function or does not have a name and query defined');
       return false;
-    }
-    if(!Object(_utils_validate__WEBPACK_IMPORTED_MODULE_0__["isString"])(system.name)){
-      _log(`The name of a system must be a string`);
-      return false
     }
 
     if(!Object(_utils_validate__WEBPACK_IMPORTED_MODULE_0__["isArray"])(system.query, 'string')){
       _log(`System ${system.name} does not have a correct query. A query must be an array of string.`)
+      return false;
     }
 
     return true
   }
 
+  /**
+   * Execute all registered systems
+   */
   const execute = () => {
     // loop through all systems
     for(let [name, system] of _registeredSystems){
@@ -1012,10 +975,16 @@ const SystemManager = (storage, verbose) => {
     }
   }
 
+  /**
+   * Register a new system
+   * @param {function} system - A system to be registered
+   * @returns {boolean} - True if successful else false
+   */
   const register = (system) => {
     if(_validate(system)){
       _log(`Registering ${system.name} System`)
       _registeredSystems.set(system.name, system);
+      return true;
     } else {
       return false;
     }
@@ -1027,50 +996,6 @@ const SystemManager = (storage, verbose) => {
   }
 
 }
-
-
-/***/ }),
-
-/***/ "./src/systems/index.js":
-/*!******************************!*\
-  !*** ./src/systems/index.js ***!
-  \******************************/
-/*! exports provided: Systems */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Systems", function() { return Systems; });
-/* harmony import */ var _move__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./move */ "./src/systems/move.js");
-
-
-const Systems = {
-  Move: _move__WEBPACK_IMPORTED_MODULE_0__["Move"],
-}
-
-
-/***/ }),
-
-/***/ "./src/systems/move.js":
-/*!*****************************!*\
-  !*** ./src/systems/move.js ***!
-  \*****************************/
-/*! exports provided: Move */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Move", function() { return Move; });
-
-
-const Move = (components, log) => {
-  const position = components.get('Position')
-  position.x += 10;
-  position.y += 10;
-  return components;
-};
-
-Move.query = ['Position'];
 
 
 /***/ }),
