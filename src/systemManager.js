@@ -1,4 +1,4 @@
-import {isString, isArray} from './utils/validate';
+import {isArray} from './utils/validate';
 
 export const SystemManager = (storage, verbose) => {
 
@@ -18,22 +18,22 @@ export const SystemManager = (storage, verbose) => {
 
   const _validate = (system) => {
     //check that system is a function with the correct prototype
-    if(!typeof(system) === 'function' || !system.hasOwnProperty('query') || !system.hasOwnProperty('name')) {
+    if(!typeof(system) === 'function' || !system.hasOwnProperty('query')) {
       _log('Trying to register a system that is either not a function or does not have a name and query defined');
       return false;
-    }
-    if(!isString(system.name)){
-      _log(`The name of a system must be a string`);
-      return false
     }
 
     if(!isArray(system.query, 'string')){
       _log(`System ${system.name} does not have a correct query. A query must be an array of string.`)
+      return false;
     }
 
     return true
   }
 
+  /**
+   * Execute all registered systems
+   */
   const execute = () => {
     // loop through all systems
     for(let [name, system] of _registeredSystems){
@@ -44,10 +44,16 @@ export const SystemManager = (storage, verbose) => {
     }
   }
 
+  /**
+   * Register a new system
+   * @param {function} system - A system to be registered
+   * @returns {boolean} - True if successful else false
+   */
   const register = (system) => {
     if(_validate(system)){
       _log(`Registering ${system.name} System`)
       _registeredSystems.set(system.name, system);
+      return true;
     } else {
       return false;
     }
