@@ -859,6 +859,9 @@ const MemoryStorage = (verbose) => {
    */
   const getEntityByComponents = (components) => {
     _log(`Get List of Entities by Components for `,components)
+    if(!Array.isArray(components)){
+      throw Error('Components must be an array');
+    }
     const e =  components.reduce((acc, val) => {
       if(acc.size == 0){
         return ComponentMap.get(val) || new Set();
