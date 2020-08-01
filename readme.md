@@ -1,5 +1,8 @@
 # Enki - Engine
 
+![unit_test](https://github.com/enkige/engine/workflows/Unit%20Test/badge.svg) ![build](https://github.com/enkige/engine/workflows/Build/badge.svg)
+
+
 Enki Engine is a Entity Component System library in native Javascript.  
 It is highly inspired from the ECSY framework made by Mozila.  
 
