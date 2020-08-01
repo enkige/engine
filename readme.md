@@ -11,7 +11,9 @@ Enki Engine in a few points:
     * Browser: Chrome, Safari, Firefox, Edge (usually last 3 versions only)
     * ECMAScript Modules, play well with React and other framework
     * Node 12+ (it probably work for older versions of node but we don't actively support it and won't fix bugs for them)
-* early version so expect a few missing features or issues 
+* early version so expect a few missing features or issues. 
+
+Breaking changes may happen until Enki Engine reach version 0.1 hence we strongly advise to read the release notes on github before updating the package.
 
 ## Getting started
 
