@@ -17,6 +17,7 @@ Enki Engine in a few points:
 * early version so expect a few missing features or issues. 
 
 Breaking changes may happen until Enki Engine reach version 0.1 hence we strongly advise to read the release notes on github before updating the package.
+Please see the [changelog](changelog.md) for breaking changes
 
 ## Getting started
 
