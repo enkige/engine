@@ -31,17 +31,22 @@ export const SystemManager = (storage, verbose) => {
     return true
   }
 
+
   /**
    * Execute all registered systems
+   * @returns {Map{Array}} - Return values from each system
    */
   const execute = () => {
     // loop through all systems
+    const returnValues = new Map();
     for(let [name, system] of _registeredSystems){
       const entities = _query(system.query);
+      returnValues.set(name,new Map())
       entities.forEach((e) => {
-        system(_storage.getEntityComponents(e))
+        returnValues.get(name).set(e, system(_storage.getEntityComponents(e)))
       })
     }
+    return returnValues;
   }
 
   /**

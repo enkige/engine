@@ -63,13 +63,14 @@ describe('Execute Systems', () => {
 
     it('execute systems', () => {
         const sm = SystemManager(mockStorage,false)
-        const s = jest.fn()
+        const s = jest.fn(() => true)
         s.query = ['test']
         const res = sm.register(s);
-        sm.execute()
+        const execResult = sm.execute()
         expect(mockStorage.getEntityByComponents).toHaveBeenCalledWith(s.query)
         expect(mockStorage.getEntityComponents).toHaveBeenCalledWith('1234567890')
         expect(s).toHaveBeenCalledWith(new Set())
+        expect(execResult.get('mockConstructor').get('1234567890')).toBe(true)
     });
 
 })
