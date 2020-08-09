@@ -71,6 +71,12 @@ describe('Memory Storage Component', () => {
             expect(mem.removeEntityComponent(1, 'test3')).toBe(false);
         })
 
+        it('does not retrieve entities with unknown components', () => {
+            const ens = mem.getEntityByComponents(['test','unknown']);
+            expect(ens.has(1)).toBe(false)
+            expect(ens.has(2)).toBe(false)
+        })
+
 
     })
 
