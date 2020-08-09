@@ -34,7 +34,8 @@ const Engine = ({storageType = 'MemoryStorage', mode = 'production', storageInst
   return {
     EntityManager: entityMgr,
     SystemManager: systemMgr,
-    ComponentManager: componentMgr
+    ComponentManager: componentMgr,
+    Storage: storage
   }
 
 }
