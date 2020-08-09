@@ -1113,7 +1113,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     return {
       EntityManager: entityMgr,
       SystemManager: systemMgr,
-      ComponentManager: componentMgr
+      ComponentManager: componentMgr,
+      Storage: storage
     };
   };
 
@@ -1295,7 +1296,13 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         }
 
         return new Set(_toConsumableArray(acc).filter(function (i) {
-          return ComponentMap.get(val).has(i);
+          var c = ComponentMap.get(val);
+
+          if (typeof c === 'undefined') {
+            return false;
+          }
+
+          return c.has(i);
         }));
       }, new Set());
 
@@ -1434,11 +1441,14 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     };
     /**
      * Execute all registered systems
+     * @returns {Map{Array}} - Return values from each system
      */
 
 
     var execute = function execute() {
       // loop through all systems
+      var returnValues = new Map();
+
       var _iterator = _createForOfIteratorHelper(_registeredSystems),
           _step;
 
@@ -1450,8 +1460,9 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
           var entities = _query(system.query);
 
+          returnValues.set(name, new Map());
           entities.forEach(function (e) {
-            system(_storage.getEntityComponents(e));
+            returnValues.get(name).set(e, system(_storage.getEntityComponents(e)));
           });
         };
 
@@ -1463,6 +1474,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       } finally {
         _iterator.f();
       }
+
+      return returnValues;
     };
     /**
      * Register a new system
