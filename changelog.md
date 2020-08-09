@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 0.0.6
+
+* Fix Issue with systems query using multiple components when one of these components is unused or not registered
+* Expose Storage instance from EnkiEngine. 
+* Expose returned values of Systems after executions 
+
 ## Version 0.0.5
 
 * Fix package.json for failing es6 module imports for browser.

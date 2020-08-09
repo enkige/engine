@@ -105,6 +105,21 @@ The following code shows an example of system registration:
         mySystem.query = ['someComponentName']; 
         const eng = EnkiEngine();
         eng.systemMgr.register(mySystem); // registering system here
+        
+#### Execute Systems loop
+
+Once systems are registered, you need to manually call the execution of all systems:
+    
+    const executionResults = eng.systemMgr.execute()
+
+This is usually done within an animation loop. If your systems return values, they will be returned with the following format: 
+
+    Map({systemName} => Map( {entityID} => {returnedValue} )
+
+For example:
+
+     Map(1) { 'HiddenSystem' => Map(1) { '1234567890' => true } }
+
     
 ### Creating a custom Storage Instance
 
