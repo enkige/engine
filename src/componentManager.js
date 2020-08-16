@@ -15,6 +15,7 @@ export const ComponentManager = (storage, verbose) => {
     //check if component is registered
     const c = _registeredComponents.get(ComponentId);
     if (typeof c === 'undefined') {
+      _log(`Component ${ComponentId} is not registered`);
       return false;
     }
 
@@ -74,7 +75,7 @@ export const ComponentManager = (storage, verbose) => {
       _storage.addEntityComponent(entityId, ComponentName, Object.assign(defaultValues, value));
       return true;
     } else {
-      _log(`Component ${ComponentName} could not added to ${entityId} due to fail validation`);
+      _log(`Component ${ComponentName} could not added to ${entityId} due to fail validation.`);
       return false;
     }
   };
