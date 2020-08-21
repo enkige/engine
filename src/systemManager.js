@@ -35,12 +35,12 @@ export const SystemManager = (storage, verbose) => {
         }
 
         const res = system()
-        if(!res.hasOwnProperty('execute') || typeof (res.execute) !== 'function') {
+        if (!res.hasOwnProperty('execute') || typeof (res.execute) !== 'function') {
             _log(`System ${system.name} does not have an execute function`)
             return false
         }
 
-        if(!res.hasOwnProperty('events') || typeof (res.events) !== 'function') {
+        if (!res.hasOwnProperty('events') || typeof (res.events) !== 'function') {
             _log(`System ${system.name} does not have an events function`)
             return false
         }
@@ -74,7 +74,7 @@ export const SystemManager = (storage, verbose) => {
     const register = (system) => {
         if (_validate(system)) {
             _log(`Registering ${system.name} System`)
-            _registeredSystems.set(system.name, { instance: system(), query: system.query, events: system.events});
+            _registeredSystems.set(system.name, {instance: system(), query: system.query, events: system.events});
             return true;
         } else {
             _log(`System ${system.name} failed validation and was not registered.`);
@@ -97,8 +97,8 @@ export const SystemManager = (storage, verbose) => {
         }
     }
 
-    const triggerEvent = (eventName, eventData) => {
-        if(!_registerEvents.has(eventName)) {
+    const triggerEvent = (eventName, eventData, filter) => {
+        if (!_registerEvents.has(eventName)) {
             _log(`Event ${eventName} is not registered.`);
             return false;
         }
@@ -106,11 +106,13 @@ export const SystemManager = (storage, verbose) => {
         // loop through all systems
         const returnValues = new Map();
         for (let [name, system] of _registeredSystems) {
-            if(system.events.includes(eventName)){
+            if (system.events.includes(eventName)) {
                 const entities = _query(system.query);
                 returnValues.set(name, new Map())
                 entities.forEach((e) => {
-                    returnValues.get(name).set(e, system.instance.events(_storage.getEntityComponents(e),eventName,eventData))
+                    if (!filter || filter.includes(e)) {
+                        returnValues.get(name).set(e, system.instance.events(_storage.getEntityComponents(e), eventName, eventData))
+                    }
                 })
             }
         }

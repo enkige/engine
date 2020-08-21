@@ -10,6 +10,7 @@ const mockStorage = {
     getEntityByComponents: jest.fn(() => {
         const e = new Set();
         e.add('1234567890')
+        e.add('testEntity')
         return e;
     }),
     getEntityComponents: jest.fn(() => {
@@ -137,6 +138,11 @@ describe('Execute Systems', () => {
         expect(execResult.get('mockConstructor').get('1234567890')).toBe(true)
     });
 
+
+
+})
+
+describe('Events Systems', () => {
     it('trigger events', () => {
         const sm = SystemManager(mockStorage, false)
         const execute = jest.fn(() => {
@@ -161,6 +167,35 @@ describe('Execute Systems', () => {
         expect(s).toHaveBeenCalledWith()
         expect(events).toHaveBeenCalledWith(new Set(),'click', {})
         expect(execResult.get('mockConstructor').get('1234567890')).toBe(true)
+    })
+
+    it('filters out entities on event Triggers', () => {
+        const sm = SystemManager(mockStorage, false)
+        const execute = jest.fn(() => {
+            return true
+        })
+        const events = jest.fn(() => {
+            return true
+        })
+        const s = jest.fn(() => {
+            return {
+                execute,
+                events
+            }
+        })
+        s.query = ['test']
+        s.events = ['click']
+        const res = sm.register(s);
+        sm.registerEvent('click')
+        const execResult = sm.triggerEvent('click', {},['testEntity'])
+        expect(mockStorage.getEntityByComponents).toHaveBeenCalledWith(s.query)
+        expect(mockStorage.getEntityComponents).not.toHaveBeenCalledWith('1234567890')
+        expect(mockStorage.getEntityComponents).toHaveBeenCalledWith('testEntity')
+        expect(s).toHaveBeenCalledWith()
+        expect(events).toHaveBeenCalledWith(new Set(),'click', {})
+        expect(execResult.get('mockConstructor').get('1234567890')).toBeUndefined()
+        expect(execResult.get('mockConstructor').get('testEntity')).toBe(true)
+
     })
 
     it('decline non registered events', () => {
@@ -188,5 +223,4 @@ describe('Execute Systems', () => {
         const res = sm.registerEvent(1234)
         expect(res).toBe(false)
     })
-
 })
