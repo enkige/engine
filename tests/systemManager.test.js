@@ -34,8 +34,13 @@ describe('Register System', () => {
     it('register a correct system', () => {
         const sm = SystemManager(mockStorage, true)
         const mySystem = (c, l) => {
+            return {
+                execute: function(){},
+                events: function(){}
+            }
         }
         mySystem.query = ['test']
+        mySystem.events = ['someEvents']
         const res = sm.register(mySystem);
         expect(res).toBe(true);
         expect(consoleOutput).toEqual([[
@@ -51,8 +56,34 @@ describe('Register System', () => {
         let res = sm.register(s);
         expect(res).toBe(false);
 
-        s = {}
-        s.query = [1, 2, 3]
+        s = () => {
+            return {
+                execute: function(){},
+                events: function(){}
+            }
+        }
+        res = sm.register(s);
+        expect(res).toBe(false);
+
+        s = () => {
+            return {
+                execute: function(){},
+                events: function(){}
+            }
+        }
+        s.query =[123,123]
+        s.events = ['test']
+        res = sm.register(s);
+        expect(res).toBe(false);
+
+        s = () => {
+            return {
+                execute: function(){},
+                events: function(){}
+            }
+        }
+        s.query = ['test']
+        s.events = [123,123]
         res = sm.register(s);
         expect(res).toBe(false);
 
@@ -79,7 +110,7 @@ describe('Execute Systems', () => {
         const execResult = sm.execute()
         expect(mockStorage.getEntityByComponents).toHaveBeenCalledWith(s.query)
         expect(mockStorage.getEntityComponents).toHaveBeenCalledWith('1234567890')
-        expect(s).toHaveBeenCalledWith(new Set())
+        expect(s).toHaveBeenCalled()
         expect(execResult.get('mockConstructor').get('1234567890')).toBe(true)
     });
 
