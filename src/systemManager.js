@@ -50,7 +50,7 @@ export const SystemManager = (storage, verbose) => {
             const entities = _query(system.query);
             returnValues.set(name, new Map())
             entities.forEach((e) => {
-                returnValues.get(name).set(e, system(_storage.getEntityComponents(e)).execute())
+                returnValues.get(name).set(e, system().execute(_storage.getEntityComponents(e)))
             })
         }
         return returnValues;
