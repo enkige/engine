@@ -19,9 +19,8 @@ export const SystemManager = (storage, verbose) => {
 
     const _validate = (system) => {
         //check that system is a function with the correct prototype
-        if (!typeof (system) === 'function' || !system.hasOwnProperty('query')) {
+        if (typeof (system) !== 'function' || !system.hasOwnProperty('query')) {
             _log('Trying to register a system that is either not a function or does not have a name and query defined');
-            const res = system(new Map())
             return false;
         }
 
@@ -33,6 +32,17 @@ export const SystemManager = (storage, verbose) => {
         if (!isArray(system.events, 'string')) {
             _log(`System ${system.name} does not have a correct events trigger setup. Systems must have an events property that is an empty array or an array of Events name.`)
             return false;
+        }
+
+        const res = system()
+        if(!res.hasOwnProperty('execute') || typeof (res.execute) !== 'function') {
+            _log(`System ${system.name} does not have an execute function`)
+            return false
+        }
+
+        if(!res.hasOwnProperty('events') || typeof (res.events) !== 'function') {
+            _log(`System ${system.name} does not have an events function`)
+            return false
         }
 
         return true
@@ -50,7 +60,7 @@ export const SystemManager = (storage, verbose) => {
             const entities = _query(system.query);
             returnValues.set(name, new Map())
             entities.forEach((e) => {
-                returnValues.get(name).set(e, system().execute(_storage.getEntityComponents(e)))
+                returnValues.get(name).set(e, system.instance.execute(_storage.getEntityComponents(e)))
             })
         }
         return returnValues;
@@ -64,7 +74,7 @@ export const SystemManager = (storage, verbose) => {
     const register = (system) => {
         if (_validate(system)) {
             _log(`Registering ${system.name} System`)
-            _registeredSystems.set(system.name, system);
+            _registeredSystems.set(system.name, { instance: system(), query: system.query, events: system.events});
             return true;
         } else {
             _log(`System ${system.name} failed validation and was not registered.`);
@@ -87,7 +97,7 @@ export const SystemManager = (storage, verbose) => {
         }
     }
 
-    const triggerEvent = (eventName) => {
+    const triggerEvent = (eventName, eventData) => {
         if(!_registerEvents.has(eventName)) {
             _log(`Event ${eventName} is not registered.`);
             return false;
@@ -100,7 +110,7 @@ export const SystemManager = (storage, verbose) => {
                 const entities = _query(system.query);
                 returnValues.set(name, new Map())
                 entities.forEach((e) => {
-                    returnValues.get(name).set(e, system(_storage.getEntityComponents(e)).events())
+                    returnValues.get(name).set(e, system.instance.events(_storage.getEntityComponents(e),eventName,eventData))
                 })
             }
         }
