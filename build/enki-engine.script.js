@@ -836,6 +836,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       var c = _registeredComponents.get(ComponentId);
 
       if (typeof c === 'undefined') {
+        _log("Component ".concat(ComponentId, " is not registered"));
+
         return false;
       } //check if values are correct
 
@@ -916,7 +918,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
         return true;
       } else {
-        _log("Component ".concat(ComponentName, " could not added to ").concat(entityId, " due to fail validation"));
+        _log("Component ".concat(ComponentName, " could not added to ").concat(entityId, " due to fail validation."));
 
         return false;
       }
@@ -996,11 +998,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     var _storage = storage;
     /**
      * Add a new entity
+     * @param {string} [id] - Entity Id
      * @returns {string} - Entity Id
      */
 
-    var add = function add() {
-      var entity = (0, _uuid.v4)();
+    var add = function add(id) {
+      var entity = id || (0, _uuid.v4)();
 
       _storage.addEntity(entity);
 
@@ -1400,12 +1403,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
   function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-  function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
   var SystemManager = function SystemManager(storage, verbose) {
     var _storage = storage;
 
     var _registeredSystems = new Map();
+
+    var _registerEvents = new Set();
 
     var _log = function _log() {
       if (verbose) {
@@ -1425,7 +1428,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
     var _validate = function _validate(system) {
       //check that system is a function with the correct prototype
-      if (!_typeof(system) === 'function' || !system.hasOwnProperty('query')) {
+      if (typeof system !== 'function' || !system.hasOwnProperty('query')) {
         _log('Trying to register a system that is either not a function or does not have a name and query defined');
 
         return false;
@@ -1433,6 +1436,26 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
       if (!(0, _validate2.isArray)(system.query, 'string')) {
         _log("System ".concat(system.name, " does not have a correct query. A query must be an array of string."));
+
+        return false;
+      }
+
+      if (!(0, _validate2.isArray)(system.events, 'string')) {
+        _log("System ".concat(system.name, " does not have a correct events trigger setup. Systems must have an events property that is an empty array or an array of Events name."));
+
+        return false;
+      }
+
+      var res = system();
+
+      if (!res.hasOwnProperty('execute') || typeof res.execute !== 'function') {
+        _log("System ".concat(system.name, " does not have an execute function"));
+
+        return false;
+      }
+
+      if (!res.hasOwnProperty('events') || typeof res.events !== 'function') {
+        _log("System ".concat(system.name, " does not have an events function"));
 
         return false;
       }
@@ -1462,7 +1485,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
           returnValues.set(name, new Map());
           entities.forEach(function (e) {
-            returnValues.get(name).set(e, system(_storage.getEntityComponents(e)));
+            returnValues.get(name).set(e, system.instance.execute(_storage.getEntityComponents(e)));
           });
         };
 
@@ -1488,17 +1511,86 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       if (_validate(system)) {
         _log("Registering ".concat(system.name, " System"));
 
-        _registeredSystems.set(system.name, system);
+        _registeredSystems.set(system.name, {
+          instance: system(),
+          query: system.query,
+          events: system.events
+        });
 
         return true;
       } else {
+        _log("System ".concat(system.name, " failed validation and was not registered."));
+
+        return false;
+      }
+    };
+    /**
+     * Register Event
+     * @param {string} eventName - Event Name
+     * @returns {boolean} - True if registered
+     */
+
+
+    var registerEvent = function registerEvent(eventName) {
+      if ((0, _validate2.isString)(eventName)) {
+        _registerEvents.add(eventName);
+
+        return true;
+      } else {
+        _log("Event ".concat(eventName, " failed validation and was not registered."));
+
         return false;
       }
     };
 
+    var triggerEvent = function triggerEvent(eventName, eventData, filter) {
+      if (!_registerEvents.has(eventName)) {
+        _log("Event ".concat(eventName, " is not registered."));
+
+        return false;
+      } // loop through all systems
+
+
+      var returnValues = new Map();
+
+      var _iterator2 = _createForOfIteratorHelper(_registeredSystems),
+          _step2;
+
+      try {
+        var _loop2 = function _loop2() {
+          var _step2$value = _slicedToArray(_step2.value, 2),
+              name = _step2$value[0],
+              system = _step2$value[1];
+
+          if (system.events.includes(eventName)) {
+            var entities = _query(system.query);
+
+            returnValues.set(name, new Map());
+            entities.forEach(function (e) {
+              if (!filter || filter.includes(e)) {
+                returnValues.get(name).set(e, system.instance.events(_storage.getEntityComponents(e), eventName, eventData));
+              }
+            });
+          }
+        };
+
+        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+          _loop2();
+        }
+      } catch (err) {
+        _iterator2.e(err);
+      } finally {
+        _iterator2.f();
+      }
+
+      return returnValues;
+    };
+
     return {
       execute: execute,
-      register: register
+      register: register,
+      registerEvent: registerEvent,
+      triggerEvent: triggerEvent
     };
   };
 

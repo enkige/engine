@@ -82,27 +82,43 @@ See the [examples](./examples) folder for some complex examples of custom compon
 
 ### Create your own System
 
-A system is a simple javascript native function. It must have 2 additional properties:
-* __query__: An array of component name that is used to retrieve entities that the system apply to
-* __name__ : the name of the system. 
+A system is a simple javascript native function that return an object with two functions:
 
-The main system function is called in each execution loop as many time as there entities that fullfill the system query.
+* __execute__: the main function called every execution loop as many time as there entities that fullfill the system query
+* __events__: a function called every time an event the system listen is happening. For each event fired, this function will be called as many time as there are entities that fullfill the system query. 
+
+It also must have 2 additional properties:
+* __query__: An array of component name that is used to retrieve entities that the system apply to
+* __events__: An array of events name the system will listen to
+
+The main system function is called once when registering the sytem. in each execution loop as many time as there entities that fullfill the system query.
 For each call, the main function is called with the following parameter (in that order):
 * __components__: A [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) of all Components of the given entity.
  
 A simple System can be as followed:
     
-    const f = (components) => {
+    const f = () => {
+        return {
+          execute: (entityComponents) => { /* some logic */ }
+          events: (entityComponents, eventName, eventData) => { /* some logic */ }
+        }
     }
     f.query = ['someComponentName'] //name of components are case sensitive 
+    f.events = ['someEventName'] //name of events are case sensitive
 
 #### Register my custom system in the Engine    
 
 You need to register the system before it will be executed. This can be used by the `register` function of the SystemManager.
 The following code shows an example of system registration:
 
-        const mySystem = (components) => {}
+        const mySystem = () => {
+           return {
+                    execute: (entityComponents) => { /* some logic */ }
+                    events: (entityComponents, eventName, eventData) => { /* some logic */ }
+                  }
+        }
         mySystem.query = ['someComponentName']; 
+        mySystem.events = []; 
         const eng = EnkiEngine();
         eng.systemMgr.register(mySystem); // registering system here
         
@@ -119,6 +135,43 @@ This is usually done within an animation loop. If your systems return values, th
 For example:
 
      Map(1) { 'HiddenSystem' => Map(1) { '1234567890' => true } }
+     
+#### Using events
+
+Before you can use an event, this even must be registered within the systemManager instance. 
+You can do so with the following function:
+    
+    eng.systemMgr.registerEvent('MyEventName')
+
+Once an event is registered, you can trigger events by using the following: 
+
+    eng.systemMgr.triggerEvent('MyEventName', {})
+
+You can pass data to the she system Events function by passing an object as the second parameter of the `triggerEvent` function. 
+You can also enforce which entities will be triggered by this event by passing an array of entity ID as the third parameter of the `triggerEvent` function. 
+
+Here is a full example that trigger a click event with some user input and only allow the `display` element to be trigered by this event.
+
+    const eng = EnkiEngine();
+    const someComponentName = { name:'someComponentName' }
+    const mySystem = () => {
+               return {
+                        execute: (entityComponents) => { /* some logic */ }
+                        events: (entityComponents, eventName, eventData) => { 
+                            if (eventName == 'click') { /* some logic */ }
+                        }
+                      }
+            }
+    mySystem.query = ['someComponentName']; 
+    mySystem.events = ['click]; // add listener to click event
+    const eng = EnkiEngine();
+    eng.systemMgr.register(mySystem); // registering system here
+    eng.systemMgr.registerEvent('click'); // registering system event here
+    const en = eng.entityMgr.add('display')
+    componentMgr.add(en, someComponentName.name)
+    eng.systemMgr.triggerEvent('click', {name: 'my new name'},['display']) // trigger a 'click' event with data only for the entity 'display'
+    
+     
 
     
 ### Creating a custom Storage Instance
@@ -180,9 +233,8 @@ Then you can access the example at the following url:
 
 We will try to keep this list updated but the best way to check examples available is to go to the [examples](./examples) folder.
 
+* `basic.js`: a basic example of creating systems and components
 * `html_script_usage`: a basic browser example to show how to use EnkiEngine without ES6 modules.
 * `react_state_storage`: a very simple custom storage example using React state
 * `three.js`: a basic example to integrate three.js rendering engine with 1000 entities.  
-* `customSystem.js`: a basic example of creating a custom system and registering it
-* `customComponent.js`: basic example to create a custom component and registering it
 * `performance.js`: basic (and very flawed) performance test with 100,000 entities. Performance really depend on the complexity of the systems registered.
