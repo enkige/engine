@@ -3,9 +3,15 @@ import {MemoryStorage} from '../../src/storage/memoryStorage';
 describe('Memory Storage Component', () => {
 
     describe('it manages entities', () => {
-        const mem = MemoryStorage(false);
+        const memOrig = MemoryStorage(false);
+        const  state = {
+            Entities: new Set(),
+            ComponentMap: new Map(),
+            EntityComponents: new Map()
+        }
+        const memExt = MemoryStorage(false, state);
 
-        it('adds entity and retrieve it',() =>{
+        test.each([[memOrig],[memExt]])('adds entity and retrieve it',(mem) =>{
             mem.addEntity(1);
             mem.addEntity(2);
             const s = mem.addEntity(3);
@@ -13,7 +19,7 @@ describe('Memory Storage Component', () => {
             expect(mem.getEntity(1)).toEqual(1);
         })
 
-        it('retrieves all entities',() => {
+        test.each([[memOrig],[memExt]])('retrieves all entities',(mem) => {
             const ae = mem.getEntities()
             expect(ae.size).toEqual(3)
             expect(ae.has(1)).toBe(true);
@@ -22,11 +28,11 @@ describe('Memory Storage Component', () => {
 
         })
 
-        it('return undefined when entity does not exists',() =>{
+        test.each([[memOrig],[memExt]])('return undefined when entity does not exists',(mem) =>{
             expect(mem.getEntity(123)).toBeUndefined();
         })
 
-        it('remove existing entity', () => {
+        test.each([[memOrig],[memExt]])('remove existing entity', (mem) => {
             expect(mem.removeEntity(1)).toBe(true);
             expect(mem.getEntity(1)).toBeUndefined();
         })
@@ -76,6 +82,29 @@ describe('Memory Storage Component', () => {
             expect(ens.has(1)).toBe(false)
             expect(ens.has(2)).toBe(false)
         })
+
+        it('removes all components when deleting an entity', () => {
+            const res = mem.removeEntity(2)
+            expect(res).toBe(true)
+            const ens = mem.getEntityByComponents(['test']);
+            expect(ens).toEqual(new Set())
+        })
+
+
+    })
+
+    it('returns state', () => {
+        const mem = MemoryStorage(false);
+        const state = mem.getState();
+        expect(state).toEqual({
+            Entities: new Set(),
+            ComponentMap: new Map(),
+            EntityComponents: new Map()
+        })
+    })
+
+    describe('it accepts external component as storage', () => {
+
 
 
     })
