@@ -1074,7 +1074,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
-  _exports["default"] = void 0;
+  _exports._storage = _exports["default"] = void 0;
 
   function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
 
@@ -1123,6 +1123,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
   var _default = Engine;
   _exports["default"] = _default;
+  var _storage = _index.Storage;
+  _exports._storage = _storage;
 });
 
 /***/ }),
@@ -1192,17 +1194,19 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
   /**
    *
-   * @param verbose
+   * @param {boolean} verbose - If True will send log to console
+   * @param {{Entities: {Set}, ComponentMap:{Map}, EntityComponents: {Map} }} state - Object containing 3 property that must react like Map or Set. Will be used to store the state
    * @returns {{addEntity: (function(*): Set<any>), removeEntityComponent: removeEntityComponent, getEntityComponents: (function(*): any), getEntities: (function(): Set<*>), addEntityComponent: addEntityComponent, getEntity: (function(*=): *), removeEntity: (function(*=): boolean), getEntityByComponents: (function(Array): *)}}
    * @constructor
    */
   var MemoryStorage = function MemoryStorage(verbose) {
+    var state = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var _verbose = verbose;
-    var Entities = new Set(); //list of entities created
+    var Entities = state.Entities || new Set(); //list of entities created
 
-    var ComponentMap = new Map(); //a map for quickly retrieve entity that have a given component (ComponentId => [entity1, entity2...])
+    var ComponentMap = state.ComponentMap || new Map(); //a map for quickly retrieve entity that have a given component (ComponentId => [entity1, entity2...])
 
-    var EntityComponents = new Map(); // a 3D map with primary key being entity ID with a map of all components
+    var EntityComponents = state.EntityComponents || new Map(); // a 3D map with primary key being entity ID with a map of all components
 
     var _log = function _log() {
       if (verbose) {
@@ -1231,6 +1235,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     };
     /**
      * Remove an entity from storage
+     * This delete all its components as well
      * @param entityId
      * @returns {boolean}
      */
@@ -1239,6 +1244,11 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     var removeEntity = function removeEntity(entityId) {
       _log("Removing Entity ".concat(entityId));
 
+      var componentsName = EntityComponents.get(entityId);
+      componentsName.forEach(function (v, k) {
+        ComponentMap.get(k)["delete"](entityId);
+      });
+      EntityComponents["delete"](entityId);
       return Entities["delete"](entityId);
     };
     /**
@@ -1349,6 +1359,19 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         return EntityComponents.get(entityId)["delete"](componentName) && ComponentMap.get(componentName)["delete"](entityId);
       }
     };
+    /**
+     * Return an object containing the current state
+     * @returns {{ComponentMap: Map<any, any>, EntityComponents: Map<any, any>, Entities: Set<any>}}
+     */
+
+
+    var getState = function getState() {
+      return {
+        Entities: Entities,
+        ComponentMap: ComponentMap,
+        EntityComponents: EntityComponents
+      };
+    };
 
     return {
       addEntity: addEntity,
@@ -1358,7 +1381,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       addEntityComponent: addEntityComponent,
       removeEntityComponent: removeEntityComponent,
       getEntityByComponents: getEntityByComponents,
-      getEntityComponents: getEntityComponents
+      getEntityComponents: getEntityComponents,
+      getState: getState
     };
   };
 

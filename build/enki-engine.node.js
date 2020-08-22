@@ -699,11 +699,12 @@ const EntityManager = (storage) => {
 /*!**********************!*\
   !*** ./src/index.js ***!
   \**********************/
-/*! exports provided: default */
+/*! exports provided: default, _storage */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_storage", function() { return _storage; });
 /* harmony import */ var _entityManager_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./entityManager.js */ "./src/entityManager.js");
 /* harmony import */ var _componentManager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./componentManager.js */ "./src/componentManager.js");
 /* harmony import */ var _systemManager_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./systemManager.js */ "./src/systemManager.js");
@@ -751,7 +752,7 @@ const Engine = ({storageType = 'MemoryStorage', mode = 'production', storageInst
 }
 
 /* harmony default export */ __webpack_exports__["default"] = (Engine);
-
+const _storage = _storage_index_js__WEBPACK_IMPORTED_MODULE_3__["Storage"];
 
 /***/ }),
 
@@ -787,15 +788,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MemoryStorage", function() { return MemoryStorage; });
 /**
  *
- * @param verbose
+ * @param {boolean} verbose - If True will send log to console
+ * @param {{Entities: {Set}, ComponentMap:{Map}, EntityComponents: {Map} }} state - Object containing 3 property that must react like Map or Set. Will be used to store the state
  * @returns {{addEntity: (function(*): Set<any>), removeEntityComponent: removeEntityComponent, getEntityComponents: (function(*): any), getEntities: (function(): Set<*>), addEntityComponent: addEntityComponent, getEntity: (function(*=): *), removeEntity: (function(*=): boolean), getEntityByComponents: (function(Array): *)}}
  * @constructor
  */
-const MemoryStorage = (verbose) => {
+const MemoryStorage = (verbose, state = {}) => {
     const _verbose = verbose;
-    const Entities = new Set(); //list of entities created
-    const ComponentMap = new Map(); //a map for quickly retrieve entity that have a given component (ComponentId => [entity1, entity2...])
-    const EntityComponents = new Map(); // a 3D map with primary key being entity ID with a map of all components
+    const Entities = state.Entities || new Set(); //list of entities created
+    const ComponentMap = state.ComponentMap || new Map(); //a map for quickly retrieve entity that have a given component (ComponentId => [entity1, entity2...])
+    const EntityComponents = state.EntityComponents || new Map(); // a 3D map with primary key being entity ID with a map of all components
 
     const _log = (...$msg) => {
         if (verbose) {
@@ -816,11 +818,17 @@ const MemoryStorage = (verbose) => {
 
     /**
      * Remove an entity from storage
+     * This delete all its components as well
      * @param entityId
      * @returns {boolean}
      */
     const removeEntity = (entityId) => {
         _log(`Removing Entity ${entityId}`)
+        const componentsName = EntityComponents.get(entityId)
+        componentsName.forEach((v,k) => {
+            ComponentMap.get(k).delete(entityId)
+        })
+        EntityComponents.delete(entityId)
         return Entities.delete(entityId)
     }
 
@@ -915,6 +923,18 @@ const MemoryStorage = (verbose) => {
         }
     }
 
+    /**
+     * Return an object containing the current state
+     * @returns {{ComponentMap: Map<any, any>, EntityComponents: Map<any, any>, Entities: Set<any>}}
+     */
+    const getState = () => {
+        return {
+            Entities,
+            ComponentMap,
+            EntityComponents
+        }
+    }
+
     return {
         addEntity,
         removeEntity,
@@ -923,7 +943,8 @@ const MemoryStorage = (verbose) => {
         addEntityComponent,
         removeEntityComponent,
         getEntityByComponents,
-        getEntityComponents
+        getEntityComponents,
+        getState
     }
 }
 

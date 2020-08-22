@@ -25,10 +25,8 @@ The best way to get started is to have a look at our examples in the [examples](
 You can add Enki Engine with npm or yarn:
 
     npm install @enki/engine
-    
-## Advance usage
 
-### Creating a custom component
+### Creating a component
 
 A component is a simple javascript object consisting of a required name property and an optional data structure as followed:
 
@@ -62,7 +60,7 @@ Here are the different available values for the data structure keys:
 Please note that the type `any` allow you to pass any type of data, such as class instance, functions, objects etc. and that no data validation will be made for these properties.
 This allow to pass complex data such as Rendering Engine Mesh for examples (see the [THREE.JS](./examples/three.js/index.html) example).   
 
-#### Using your custom component into the Engine
+#### Using your component into the Engine
 
 You need to register your component before you add it to an entity. Components name need to be unique.
 If an existing component as the same name as your component, your component will override the existing one.
@@ -80,7 +78,7 @@ You can use the following snippet to register a component:
     
 See the [examples](./examples) folder for some complex examples of custom components.
 
-### Create your own System
+### Create a System
 
 A system is a simple javascript native function that return an object with two functions:
 
@@ -106,7 +104,7 @@ A simple System can be as followed:
     f.query = ['someComponentName'] //name of components are case sensitive 
     f.events = ['someEventName'] //name of events are case sensitive
 
-#### Register my custom system in the Engine    
+#### Register a system in the Engine    
 
 You need to register the system before it will be executed. This can be used by the `register` function of the SystemManager.
 The following code shows an example of system registration:
@@ -182,14 +180,16 @@ Example of storage could be a React State or Redux for applications.
 Creating a custom storage is straight forward. You need to first create a specific function with the following signature:
 
 
-```$xslt
+```
 /**
- * 
  * @param {boolean} verbose - true if verbose mode set in Enki Engine
- * @returns {{addEntity: (function(*): Set<any>), removeEntityComponent: removeEntityComponent, getEntityComponents: (function(*): any), getEntities: (function(): Set<*>), addEntityComponent: addEntityComponent, getEntity: (function(*=): *), removeEntity: (function(*=): boolean), getEntityByComponents: (function(Array): *)}}
- * @constructor
+ * @param {{Entities: {Set}, ComponentMap:{Map}, EntityComponents: {Map} }} [state] - Optional Object containing 3 property that must react like Map or Set. Will be used to store the state
+ * @returns {{addEntity: (function(*): Set<any>), removeEntityComponent: removeEntityComponent, getEntityComponents: (function(*): any), getEntities: (function(): Set<*>), addEntityComponent: addEntityComponent, getEntity: (function(*=): *), removeEntity: (function(*=): boolean), getEntityByComponents: (function(Array): *), getState: (function(): Object}}
  */
 ```
+
+It is possible to use the second parameter of the constructor to pass external state to the Engine, this allow to extends the storage engine.
+An example is available [here](./examples/react_state_storage/storage.js)
 
 The signature of each returned functions are available [here](./src/storage/memoryStorage.js).
 
@@ -202,6 +202,7 @@ YOu can do so by setting the `storageType` to `custom` and passing your storage 
     const eng = EnkiEngine({mode: 'debug', storageType: 'custom', storageInstance: Storage});
 
 An example of custom storage using a React State is available in the [examples](./examples/react_state_storage/storage.js) folder.
+
 ## Run examples
 
 The easiest way to run the examples included in the examples folder is to clone this repository.
