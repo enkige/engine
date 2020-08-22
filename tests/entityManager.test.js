@@ -33,6 +33,9 @@ describe('Entity Manager', () => {
         const e = em.add();
         expect(mockStorage.addEntity).toHaveBeenCalledWith(e);
 
+        const namedEntity = em.add('test')
+        expect(mockStorage.addEntity).toHaveBeenCalledWith('test');
+        expect(namedEntity).toEqual('test')
     })
 
     it('gets entity by id', () => {

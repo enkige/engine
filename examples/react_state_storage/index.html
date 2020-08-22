@@ -10,64 +10,68 @@
 <body>
 <div id="root"></div>
 <script type="module">
-  import {ReactStateStorageFactory} from './storage.js';
+    import {ReactStateStorageFactory} from './storage.js';
 
-  console.log('Get Enki Engine and display basic export from library');
-  //create instance of Engine
-
-
-
-  const e = React.createElement;
-
-  function App() {
-    const [count, setCount] = React.useState(0);
-    const [entities, setEntities] = React.useState(new Set());
-    const [componentMap, setComponentMap] = React.useState(new Map());
-    const [entityComponents, setEntityComponents] = React.useState(new Map());
-
-    //create the Storage function
-    const Storage = ReactStateStorageFactory(
-      {value: entities, set: setEntities},
-      {value: componentMap, set: setComponentMap},
-      {value: entityComponents, set: setEntityComponents},
-    );
-
-    //setting up Enki Engine
+    console.log('Get Enki Engine and display basic export from library');
+    //create instance of Engine
+    console.log(EnkiEngine)
+    const Storage = ReactStateStorageFactory(EnkiEngine._storage.MemoryStorage);
     const eng = EnkiEngine.default({mode: 'debug', storageType: 'custom', storageInstance: Storage});
-    //get entity manager
-    const entityMgr = eng.EntityManager;
 
-    // click event handler
-    const addEnt = () => {
-      entityMgr.add();
-      setCount(count + 1);
-    };
-    const removeEnt = () => {
-      const c = count - 1;
-      if(c < 0) {
-        console.log('No entities to remove');
-        return;
-      }
-      // get entities
-      setCount(c);
-      // get first entity
-      const e = entityMgr.list().next().value;
-      //remove first entity
-      entityMgr.remove(e);
-    };
+    const e = React.createElement;
 
-    return e('h1', null, `Number of entities stored in state : ${entities.size}`,
-      e('br'),
-      e('button', {onClick: addEnt}, 'Add entity'),
-      e('br'),
-      e('button', {onClick: removeEnt}, 'Remove entity'),
+    function App() {
+        const [count, setCount] = React.useState(0);
+        const [state, setState] = React.useState({
+            Entities: new Set(),
+            ComponentMap: new Map(),
+            EntityComponents: new Map()
+        })
+        const [init, setInit] = React.useState(true);
+
+        const entityMgr = eng.EntityManager;
+        const compMgr = eng.ComponentManager;
+        const sysMgr = eng.SystemManager;
+
+        React.useEffect(() => {
+            if(init) {
+                // register components and system here before setting the state
+                setState(eng.Storage.getState());
+                setInit(false);
+            }
+        }, [init])
+
+        // click event handler
+        const addEnt = () => {
+            entityMgr.add();
+            setCount(count + 1);
+        };
+        const removeEnt = () => {
+            const c = count - 1;
+            if (c < 0) {
+                console.log('No entities to remove');
+                return;
+            }
+            // get entities
+            setCount(c);
+            // get first entity
+            const e = entityMgr.list().next().value;
+            //remove first entity
+            entityMgr.remove(e);
+        };
+
+        return e('h1', null, `Number of entities stored in state : ${state.Entities.size}`,
+            e('br'),
+            e('button', {onClick: addEnt}, 'Add entity'),
+            e('br'),
+            e('button', {onClick: removeEnt}, 'Remove entity'),
+        );
+    }
+
+    ReactDOM.render(
+        e(App),
+        document.getElementById('root'),
     );
-  }
-
-  ReactDOM.render(
-    e(App),
-    document.getElementById('root'),
-  );
 
 </script>
 </body>

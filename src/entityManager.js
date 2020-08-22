@@ -5,10 +5,11 @@ export const EntityManager = (storage) => {
 
   /**
    * Add a new entity
+   * @param {string} [id] - Entity Id
    * @returns {string} - Entity Id
    */
-  const add = () => {
-    const entity = uuidv4();
+  const add = (id) => {
+    const entity = id  || uuidv4();
     _storage.addEntity(entity);
     return entity;
   };

@@ -1,14 +1,15 @@
 /**
  *
- * @param verbose
+ * @param {boolean} verbose - If True will send log to console
+ * @param {{Entities: {Set}, ComponentMap:{Map}, EntityComponents: {Map} }} state - Object containing 3 property that must react like Map or Set. Will be used to store the state
  * @returns {{addEntity: (function(*): Set<any>), removeEntityComponent: removeEntityComponent, getEntityComponents: (function(*): any), getEntities: (function(): Set<*>), addEntityComponent: addEntityComponent, getEntity: (function(*=): *), removeEntity: (function(*=): boolean), getEntityByComponents: (function(Array): *)}}
  * @constructor
  */
-export const MemoryStorage = (verbose) => {
+export const MemoryStorage = (verbose, state = {}) => {
     const _verbose = verbose;
-    const Entities = new Set(); //list of entities created
-    const ComponentMap = new Map(); //a map for quickly retrieve entity that have a given component (ComponentId => [entity1, entity2...])
-    const EntityComponents = new Map(); // a 3D map with primary key being entity ID with a map of all components
+    const Entities = state.Entities || new Set(); //list of entities created
+    const ComponentMap = state.ComponentMap || new Map(); //a map for quickly retrieve entity that have a given component (ComponentId => [entity1, entity2...])
+    const EntityComponents = state.EntityComponents || new Map(); // a 3D map with primary key being entity ID with a map of all components
 
     const _log = (...$msg) => {
         if (verbose) {
@@ -29,11 +30,17 @@ export const MemoryStorage = (verbose) => {
 
     /**
      * Remove an entity from storage
+     * This delete all its components as well
      * @param entityId
      * @returns {boolean}
      */
     const removeEntity = (entityId) => {
         _log(`Removing Entity ${entityId}`)
+        const componentsName = EntityComponents.get(entityId)
+        componentsName.forEach((v,k) => {
+            ComponentMap.get(k).delete(entityId)
+        })
+        EntityComponents.delete(entityId)
         return Entities.delete(entityId)
     }
 
@@ -128,6 +135,18 @@ export const MemoryStorage = (verbose) => {
         }
     }
 
+    /**
+     * Return an object containing the current state
+     * @returns {{ComponentMap: Map<any, any>, EntityComponents: Map<any, any>, Entities: Set<any>}}
+     */
+    const getState = () => {
+        return {
+            Entities,
+            ComponentMap,
+            EntityComponents
+        }
+    }
+
     return {
         addEntity,
         removeEntity,
@@ -136,6 +155,7 @@ export const MemoryStorage = (verbose) => {
         addEntityComponent,
         removeEntityComponent,
         getEntityByComponents,
-        getEntityComponents
+        getEntityComponents,
+        getState
     }
 }

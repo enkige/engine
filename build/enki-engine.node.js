@@ -525,6 +525,7 @@ const ComponentManager = (storage, verbose) => {
     //check if component is registered
     const c = _registeredComponents.get(ComponentId);
     if (typeof c === 'undefined') {
+      _log(`Component ${ComponentId} is not registered`);
       return false;
     }
 
@@ -584,7 +585,7 @@ const ComponentManager = (storage, verbose) => {
       _storage.addEntityComponent(entityId, ComponentName, Object.assign(defaultValues, value));
       return true;
     } else {
-      _log(`Component ${ComponentName} could not added to ${entityId} due to fail validation`);
+      _log(`Component ${ComponentName} could not added to ${entityId} due to fail validation.`);
       return false;
     }
   };
@@ -647,10 +648,11 @@ const EntityManager = (storage) => {
 
   /**
    * Add a new entity
+   * @param {string} [id] - Entity Id
    * @returns {string} - Entity Id
    */
-  const add = () => {
-    const entity = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+  const add = (id) => {
+    const entity = id  || Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
     _storage.addEntity(entity);
     return entity;
   };
@@ -697,11 +699,12 @@ const EntityManager = (storage) => {
 /*!**********************!*\
   !*** ./src/index.js ***!
   \**********************/
-/*! exports provided: default */
+/*! exports provided: default, _storage */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_storage", function() { return _storage; });
 /* harmony import */ var _entityManager_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./entityManager.js */ "./src/entityManager.js");
 /* harmony import */ var _componentManager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./componentManager.js */ "./src/componentManager.js");
 /* harmony import */ var _systemManager_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./systemManager.js */ "./src/systemManager.js");
@@ -749,7 +752,7 @@ const Engine = ({storageType = 'MemoryStorage', mode = 'production', storageInst
 }
 
 /* harmony default export */ __webpack_exports__["default"] = (Engine);
-
+const _storage = _storage_index_js__WEBPACK_IMPORTED_MODULE_3__["Storage"];
 
 /***/ }),
 
@@ -785,15 +788,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MemoryStorage", function() { return MemoryStorage; });
 /**
  *
- * @param verbose
+ * @param {boolean} verbose - If True will send log to console
+ * @param {{Entities: {Set}, ComponentMap:{Map}, EntityComponents: {Map} }} state - Object containing 3 property that must react like Map or Set. Will be used to store the state
  * @returns {{addEntity: (function(*): Set<any>), removeEntityComponent: removeEntityComponent, getEntityComponents: (function(*): any), getEntities: (function(): Set<*>), addEntityComponent: addEntityComponent, getEntity: (function(*=): *), removeEntity: (function(*=): boolean), getEntityByComponents: (function(Array): *)}}
  * @constructor
  */
-const MemoryStorage = (verbose) => {
+const MemoryStorage = (verbose, state = {}) => {
     const _verbose = verbose;
-    const Entities = new Set(); //list of entities created
-    const ComponentMap = new Map(); //a map for quickly retrieve entity that have a given component (ComponentId => [entity1, entity2...])
-    const EntityComponents = new Map(); // a 3D map with primary key being entity ID with a map of all components
+    const Entities = state.Entities || new Set(); //list of entities created
+    const ComponentMap = state.ComponentMap || new Map(); //a map for quickly retrieve entity that have a given component (ComponentId => [entity1, entity2...])
+    const EntityComponents = state.EntityComponents || new Map(); // a 3D map with primary key being entity ID with a map of all components
 
     const _log = (...$msg) => {
         if (verbose) {
@@ -814,11 +818,17 @@ const MemoryStorage = (verbose) => {
 
     /**
      * Remove an entity from storage
+     * This delete all its components as well
      * @param entityId
      * @returns {boolean}
      */
     const removeEntity = (entityId) => {
         _log(`Removing Entity ${entityId}`)
+        const componentsName = EntityComponents.get(entityId)
+        componentsName.forEach((v,k) => {
+            ComponentMap.get(k).delete(entityId)
+        })
+        EntityComponents.delete(entityId)
         return Entities.delete(entityId)
     }
 
@@ -913,6 +923,18 @@ const MemoryStorage = (verbose) => {
         }
     }
 
+    /**
+     * Return an object containing the current state
+     * @returns {{ComponentMap: Map<any, any>, EntityComponents: Map<any, any>, Entities: Set<any>}}
+     */
+    const getState = () => {
+        return {
+            Entities,
+            ComponentMap,
+            EntityComponents
+        }
+    }
+
     return {
         addEntity,
         removeEntity,
@@ -921,7 +943,8 @@ const MemoryStorage = (verbose) => {
         addEntityComponent,
         removeEntityComponent,
         getEntityByComponents,
-        getEntityComponents
+        getEntityComponents,
+        getState
     }
 }
 
@@ -943,72 +966,129 @@ __webpack_require__.r(__webpack_exports__);
 
 const SystemManager = (storage, verbose) => {
 
-  const _storage = storage;
-  const _registeredSystems = new Map();
+    const _storage = storage;
+    const _registeredSystems = new Map();
+    const _registerEvents = new Set();
 
 
-  const _log = ( ...$msg) => {
-    if(verbose) {
-      console.log('System Manager: ',...$msg)
-    }
-  }
-
-  const _query = (q) => {
-    return _storage.getEntityByComponents(q);
-  }
-
-  const _validate = (system) => {
-    //check that system is a function with the correct prototype
-    if(!typeof(system) === 'function' || !system.hasOwnProperty('query')) {
-      _log('Trying to register a system that is either not a function or does not have a name and query defined');
-      return false;
+    const _log = (...$msg) => {
+        if (verbose) {
+            console.log('System Manager: ', ...$msg)
+        }
     }
 
-    if(!Object(_utils_validate__WEBPACK_IMPORTED_MODULE_0__["isArray"])(system.query, 'string')){
-      _log(`System ${system.name} does not have a correct query. A query must be an array of string.`)
-      return false;
+    const _query = (q) => {
+        return _storage.getEntityByComponents(q);
     }
 
-    return true
-  }
+    const _validate = (system) => {
+        //check that system is a function with the correct prototype
+        if (typeof (system) !== 'function' || !system.hasOwnProperty('query')) {
+            _log('Trying to register a system that is either not a function or does not have a name and query defined');
+            return false;
+        }
 
+        if (!Object(_utils_validate__WEBPACK_IMPORTED_MODULE_0__["isArray"])(system.query, 'string')) {
+            _log(`System ${system.name} does not have a correct query. A query must be an array of string.`)
+            return false;
+        }
 
-  /**
-   * Execute all registered systems
-   * @returns {Map{Array}} - Return values from each system
-   */
-  const execute = () => {
-    // loop through all systems
-    const returnValues = new Map();
-    for(let [name, system] of _registeredSystems){
-      const entities = _query(system.query);
-      returnValues.set(name,new Map())
-      entities.forEach((e) => {
-        returnValues.get(name).set(e, system(_storage.getEntityComponents(e)))
-      })
+        if (!Object(_utils_validate__WEBPACK_IMPORTED_MODULE_0__["isArray"])(system.events, 'string')) {
+            _log(`System ${system.name} does not have a correct events trigger setup. Systems must have an events property that is an empty array or an array of Events name.`)
+            return false;
+        }
+
+        const res = system()
+        if (!res.hasOwnProperty('execute') || typeof (res.execute) !== 'function') {
+            _log(`System ${system.name} does not have an execute function`)
+            return false
+        }
+
+        if (!res.hasOwnProperty('events') || typeof (res.events) !== 'function') {
+            _log(`System ${system.name} does not have an events function`)
+            return false
+        }
+
+        return true
     }
-    return returnValues;
-  }
 
-  /**
-   * Register a new system
-   * @param {function} system - A system to be registered
-   * @returns {boolean} - True if successful else false
-   */
-  const register = (system) => {
-    if(_validate(system)){
-      _log(`Registering ${system.name} System`)
-      _registeredSystems.set(system.name, system);
-      return true;
-    } else {
-      return false;
+
+    /**
+     * Execute all registered systems
+     * @returns {Map{Array}} - Return values from each system
+     */
+    const execute = () => {
+        // loop through all systems
+        const returnValues = new Map();
+        for (let [name, system] of _registeredSystems) {
+            const entities = _query(system.query);
+            returnValues.set(name, new Map())
+            entities.forEach((e) => {
+                returnValues.get(name).set(e, system.instance.execute(_storage.getEntityComponents(e)))
+            })
+        }
+        return returnValues;
     }
-  }
 
-  return {
-    execute,
-    register
-  }
+    /**
+     * Register a new system
+     * @param {function} system - A system to be registered
+     * @returns {boolean} - True if successful else false
+     */
+    const register = (system) => {
+        if (_validate(system)) {
+            _log(`Registering ${system.name} System`)
+            _registeredSystems.set(system.name, {instance: system(), query: system.query, events: system.events});
+            return true;
+        } else {
+            _log(`System ${system.name} failed validation and was not registered.`);
+            return false;
+        }
+    }
+
+    /**
+     * Register Event
+     * @param {string} eventName - Event Name
+     * @returns {boolean} - True if registered
+     */
+    const registerEvent = (eventName) => {
+        if (Object(_utils_validate__WEBPACK_IMPORTED_MODULE_0__["isString"])(eventName)) {
+            _registerEvents.add(eventName);
+            return true;
+        } else {
+            _log(`Event ${eventName} failed validation and was not registered.`);
+            return false;
+        }
+    }
+
+    const triggerEvent = (eventName, eventData, filter) => {
+        if (!_registerEvents.has(eventName)) {
+            _log(`Event ${eventName} is not registered.`);
+            return false;
+        }
+
+        // loop through all systems
+        const returnValues = new Map();
+        for (let [name, system] of _registeredSystems) {
+            if (system.events.includes(eventName)) {
+                const entities = _query(system.query);
+                returnValues.set(name, new Map())
+                entities.forEach((e) => {
+                    if (!filter || filter.includes(e)) {
+                        returnValues.get(name).set(e, system.instance.events(_storage.getEntityComponents(e), eventName, eventData))
+                    }
+                })
+            }
+        }
+        return returnValues;
+    }
+
+    return {
+        execute,
+        register,
+        registerEvent,
+        triggerEvent
+    }
 
 }
 
