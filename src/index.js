@@ -41,3 +41,4 @@ const Engine = ({storageType = 'MemoryStorage', mode = 'production', storageInst
 }
 
 export default Engine;
+export const _storage = Storage;
