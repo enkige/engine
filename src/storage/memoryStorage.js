@@ -29,11 +29,17 @@ export const MemoryStorage = (verbose) => {
 
     /**
      * Remove an entity from storage
+     * This delete all its components as well
      * @param entityId
      * @returns {boolean}
      */
     const removeEntity = (entityId) => {
         _log(`Removing Entity ${entityId}`)
+        const componentsName = EntityComponents.get(entityId)
+        componentsName.forEach((v,k) => {
+            ComponentMap.get(k).delete(entityId)
+        })
+        EntityComponents.delete(entityId)
         return Entities.delete(entityId)
     }
 
