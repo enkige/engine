@@ -18,6 +18,40 @@ const componentMgr = eng.ComponentManager;
 
 // get system manager
 const sysMgr = eng.SystemManager;
+const position = {
+  name: 'Position',
+  data: {
+    x: {type: 'number'},
+    y: {type: 'number'}
+  }
+}
+componentMgr.register(position)
+
+
+//create my system.
+const Move = () => {
+
+  const execute = (components) => {
+    const position = components.get('Position')
+    position.x += 10;
+    position.y += 10;
+    return components;
+  }
+
+  const events = () => {
+
+  }
+
+  return {
+    execute,
+    events
+  }
+
+
+};
+Move.query = ['Position'];
+Move.events = [];
+sysMgr.register(Move)
 
 //create 100000 entities
 const t0 = performance.now();

@@ -1,70 +1,35 @@
-/**
- *
- * @param {value, set} entities - Object to retrieve and set the entities for React State
- * @param {value, set} componentMap - Object to retrieve and set the componentMap for React State
- * @param {value, set} entityComponents - Object to retrieve and set the entityComponents for React State
- * @returns {function(*): {addEntity: (function(*=): Set<any>), removeEntityComponent: removeEntityComponent, getEntityComponents: getEntityComponents, getEntities: (function(): Set<any>), addEntityComponent: addEntityComponent, getEntity: getEntity, removeEntity: (function(*=): Set<any>), getEntityByComponents: getEntityByComponents}}
- * @constructor
- */
-export const ReactStateStorageFactory = (entities, componentMap, entityComponents) => {
+export const ReactStateStorageFactory = (baseStorage) => {
+    return function ReactStorage(verbose) {
+        const _verbose = verbose;
 
-  return function ReactStateStorage (verbose) {
-    const _entities = entities;
-    const _componentMap = componentMap;
-    const _entityComponents = entityComponents;
+        const Entities = new Set(); //list of entities created
+        const ComponentMap = new Map(); //a map for quickly retrieve entity that have a given component (ComponentId => [entity1, entity2...])
+        const EntityComponents = new Map(); // a 3D map with primary key being entity ID with a map of all components
 
-    const addEntity = (entityId) => {
-      console.log(`Adding entity with id ${entityId}`);
-      const e = new Set(_entities.value);
-      e.add(entityId);
-      _entities.set(e);
-      return e;
-    };
+        const _base = baseStorage(verbose, {Entities, ComponentMap, EntityComponents})
 
-    const removeEntity = (entityId) => {
-      console.log(`Deleting entity with id ${entityId}`);
-      const e = new Set(_entities.value);
-      e.delete(entityId);
-      entities.set(e);
-      return e;
-    };
+        /**
+         * Return an object containing the current state
+         * @returns {{ComponentMap: Map<any, any>, EntityComponents: Map<any, any>, Entities: Set<any>}}
+         */
+        const getState = () => {
+            return {
+                Entities,
+                ComponentMap,
+                EntityComponents
+            }
+        }
 
-    const getEntity = (entityId) => {
-      return;
-    };
-
-    const getEntities = () => {
-      //returning a new set so users can not override the Entities Set by inadvertence
-      return new Set(_entities.value);
+        return {
+            addEntity: _base.addEntity,
+            removeEntity: _base.removeEntity,
+            getEntity: _base.getEntity,
+            getEntities: _base.getEntities,
+            addEntityComponent: _base.addEntityComponent,
+            removeEntityComponent: _base.removeEntityComponent,
+            getEntityByComponents: _base.getEntityByComponents,
+            getEntityComponents: _base.getEntityComponents,
+            getState: getState
+        }
     }
-
-    const getEntityComponents = (entityId) => {
-
-    };
-
-    const getEntityByComponents = (components) => {
-
-    };
-
-    const addEntityComponent = (entity, componentId, component) => {
-
-    };
-
-    const removeEntityComponent = (entity, component) => {
-
-    };
-
-    return {
-      addEntity,
-      removeEntity,
-      getEntity,
-      getEntities,
-      addEntityComponent,
-      removeEntityComponent,
-      getEntityByComponents,
-      getEntityComponents,
-    };
-  };
-
-};
-
+}
