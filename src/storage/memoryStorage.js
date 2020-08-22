@@ -135,6 +135,18 @@ export const MemoryStorage = (verbose, state = {}) => {
         }
     }
 
+    /**
+     * Return an object containing the current state
+     * @returns {{ComponentMap: Map<any, any>, EntityComponents: Map<any, any>, Entities: Set<any>}}
+     */
+    const getState = () => {
+        return {
+            Entities,
+            ComponentMap,
+            EntityComponents
+        }
+    }
+
     return {
         addEntity,
         removeEntity,
@@ -143,6 +155,7 @@ export const MemoryStorage = (verbose, state = {}) => {
         addEntityComponent,
         removeEntityComponent,
         getEntityByComponents,
-        getEntityComponents
+        getEntityComponents,
+        getState
     }
 }
