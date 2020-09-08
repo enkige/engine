@@ -9,7 +9,7 @@ It is highly inspired from the ECSY framework made by Mozila.
 Enki Engine in a few points:  
 
 * __Easy to understand and get started__ with examples provided with major rendering engine like THREE.JS
-* Native javascript with __very small footprint__. The build is around 30-60kb depending on platforms.
+* Native javascript with __very small footprint__. The build is around 80kb depending on platforms.
 * __Crossplatforms__ support: 
     * Browser: Chrome, Safari, Firefox, Edge (usually last 3 versions only)
     * ECMAScript Modules, play well with React and other framework
