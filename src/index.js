@@ -1,6 +1,7 @@
 import { EntityManager } from './entityManager.js';
 import { ComponentManager } from './componentManager.js';
 import { SystemManager } from './systemManager.js';
+import { TemplateManager } from './templateManager';
 import { Storage } from './storage/index.js';
 
 /**
@@ -31,10 +32,13 @@ const Engine = ({storageType = 'MemoryStorage', mode = 'production', storageInst
 
   const systemMgr = SystemManager(storage, verbose);
 
+  const templateMgr = TemplateManager(entityMgr, componentMgr,verbose);
+
   return {
     EntityManager: entityMgr,
     SystemManager: systemMgr,
     ComponentManager: componentMgr,
+    TemplateManager: templateMgr,
     Storage: storage
   }
 

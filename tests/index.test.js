@@ -19,6 +19,7 @@ test('initialise EnkiEngine with default storage', () => {
     expect(eng.ComponentManager).toBeDefined();
     expect(eng.SystemManager).toBeDefined();
     expect(eng.Storage).toBeDefined();
+    expect(eng.TemplateManager).toBeDefined();
 })
 
 test('initialise EnkiEngine with custom storage', () => {
@@ -27,4 +28,6 @@ test('initialise EnkiEngine with custom storage', () => {
     expect(eng.ComponentManager).toBeDefined();
     expect(eng.SystemManager).toBeDefined();
     expect(eng.Storage).toBeDefined();
+    expect(eng.TemplateManager).toBeDefined();
+
 })
