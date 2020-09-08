@@ -27,6 +27,7 @@ describe('Register Component', () => {
         const expectedResult = new Map();
         expectedResult.set('test',{});
         expect(res).toBe(true)
+        expect(cm.isRegistered('test')).toBe(true);
         const list = cm.list();
         expect(list.size).toEqual(1);
         expect(list).toEqual(expectedResult);
@@ -66,6 +67,13 @@ describe('Register Component', () => {
         expect(res).toBe(false)
         const list = cm.list();
         expect(list.size).toEqual(0);
+    })
+
+    it('recognised registered components', () => {
+        const cm = ComponentManager(mockStorage,false)
+        const res = cm.register({name:'test'})
+        expect(cm.isRegistered('test')).toBe(true);
+        expect(cm.isRegistered('test2')).toBe(false);
     })
 })
 

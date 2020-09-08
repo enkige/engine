@@ -109,10 +109,15 @@ export const ComponentManager = (storage, verbose) => {
     return new Map(_registeredComponents)
   }
 
+  const isRegistered = (name) => {
+    return _registeredComponents.has(name);
+  }
+
   return {
     add,
     remove,
     register,
-    list
+    list,
+    isRegistered
   };
 };
