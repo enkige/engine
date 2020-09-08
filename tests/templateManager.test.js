@@ -8,6 +8,7 @@ const mockComponentMgr = {
             throw new Error('My mock error');
         }
     }),
+    register: jest.fn(),
     isRegistered: jest.fn((name) => {
         if (name == 'unregistered') {
             return false
@@ -40,8 +41,8 @@ describe('Template Manager', () => {
         const defaultValues = new Map()
         defaultValues.set('test', 'this is my value');
 
-        templateMgr.register('myTemplate', components);
-        templateMgr.register('myTemplate2', components, defaultValues);
+        expect(templateMgr.register('myTemplate', components)).toBe(true);
+        expect(templateMgr.register('myTemplate2', components, defaultValues)).toBe(true);
         //fails
         expect(() => templateMgr.register(1234)).toThrow(new ValidationError('Invalid name for template'));
         expect(() => templateMgr.register('myTemplate')).toThrow(new ValidationError('A template with this name already exists.'));
@@ -59,7 +60,10 @@ describe('Template Manager', () => {
                 name: 'test2'
             }
         ]
-        expect(() => templateMgr.register('test4', components)).toThrow(new ValidationError('Some Components are not registered yet. Register all components before creating a template.'));
+        //disable auto registration of components
+        expect(() => templateMgr.register('test4', components, null, false)).toThrow(new ValidationError('Component unregistered is not registered.'));
+        //enable autoregistration of components
+        expect(templateMgr.register('test4', components)).toBe(true);
 
 
     })

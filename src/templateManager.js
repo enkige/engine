@@ -17,18 +17,19 @@ export const TemplateManager = (entityMgr, componentMgr, verbose) => {
      * @param {string} name - Name of the template, must be unique
      * @param {Array} components - Array of Components used by this templates. Cannot be empty.
      * @param {Map} defaultValues - Map of default Values for each components in `components` param. Key must be a component name.
+     * @param {boolean} registerComponents - If true, will register components if they are not already registered. if false, will fail registration of template if a component is not registered
      * @returns {Boolean} - True if registered
      *
      * @throws ValidationError - Error if the templates is invalid
      */
-    const register = (name, components, defaultValues) => {
+    const register = (name, components, defaultValues = null, registerComponents = true) => {
         _log('Registering template')
 
         if (!isString(name)) {
             throw new ValidationError('Invalid name for template');
         }
 
-        //check iof template already exists
+        // check iof template already exists
         if (_registeredTemplates.has(name)) {
             throw new ValidationError('A template with this name already exists.');
         }
@@ -37,16 +38,16 @@ export const TemplateManager = (entityMgr, componentMgr, verbose) => {
             throw new ValidationError('Invalid components list');
         }
 
-        //check if all components are registered
-        const check = components.reduce((acc, cur) => {
-            return acc && componentMgr.isRegistered(cur['name'])
-        }, true)
-
-        if (!check) {
-            throw new ValidationError('Some Components are not registered yet. Register all components before creating a template.');
+        // check if all components are registered, if not registered
+        for(let c of components) {
+            if(!componentMgr.isRegistered(c['name']) && registerComponents) {
+                componentMgr.register(c)
+            } else if (!componentMgr.isRegistered(c['name']) && !registerComponents) {
+                throw new ValidationError(`Component ${c['name']} is not registered.`);
+            }
         }
 
-        if (typeof defaultValues != 'undefined' && !isMap(defaultValues)) {
+        if (defaultValues !== null && !isMap(defaultValues)) {
             throw new ValidationError('defaultValues must be a Map.');
         }
 
