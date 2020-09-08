@@ -77,6 +77,39 @@ You can use the following snippet to register a component:
      );
     
 See the [examples](./examples) folder for some complex examples of custom components.
+### Using Templates
+In most softwares and games, you will reuse the same types of entity with the same list of components attached to it. 
+Enki Engine has a notion of templates that makes this easier. A template consist of a unique name, a list of component and their associated default values. 
+Templates take care of registration components for you and make creating several entities with the same component easier.
+
+For example, a 3D entity object may have a few components like: 
+* position
+* velocity
+* renderable
+
+You could set them up with the Entity and Component Manager or you can create a template as followed: 
+
+    import {Position, Velocity, Renderable} from './components.js';
+    //we don't register components and only register template
+    const eng = EnkiEngine.default();
+
+    // get template manager
+    const tplMgr = eng.TemplateManager;
+    // prepare default values
+    const dv = new Map()
+        .set('Position', {x: 0, y: 0, z: 0})
+    //register new template
+    tplMgr.register('3Dobject', [Position, Velocity, Renderable], dv);
+    const values = new Map()
+                .set('Velocity', {dx: dx, dy: dy, dz: dz} );
+    const entity1 = tplMgr.create('3Dobject', values);
+    const entity2 = tplMgr.create('3Dobject', values);
+    const entity3 = tplMgr.create('3Dobject', values);
+    
+
+See the full example ['./examples/three.js/template_example.html']('./examples/three.js/template_example.html') and
+ compare it with non template code ['./examples/three.js/index.html']('./examples/three.js/index.html')
+    
 
 ### Create a System
 

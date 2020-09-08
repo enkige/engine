@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>My first three.js app</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<script src="three.js"></script>
+<script src="../../build/enki-engine.script.js"></script>
+<script type="module">
+    //import all components for entities
+    import {Position, SceneObject, Velocity, Rotation, Renderable} from './components.js';
+    import {Move, Rotate} from './systems.js';
+
+    //setup Enki Engine
+    const eng = EnkiEngine.default();
+
+    // get template manager
+    const tplMgr = eng.TemplateManager;
+    // prepare default values
+    const dv = new Map()
+        .set('Position', {x: 0, y: 0, z: 0})
+        .set('Rotation', {rx: 0.01, ry: 0.01});
+    //register new template
+    tplMgr.register('3Dbox', [SceneObject, Position, Rotation, Velocity, Renderable], dv);
+
+    // get system manager
+    const sysMgr = eng.SystemManager;
+    //the order of system registering is important as they will be run in this order.
+    sysMgr.register(Rotate);
+    sysMgr.register(Move);
+
+    //Create THREE.JS scene
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 5;
+
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    renderer.setAnimationLoop(animate);
+
+
+
+
+    // register the cube into the engine
+    const nb_cube = 1000;
+    for(let i=0; i < nb_cube; i++ ){
+        // Add a cube in the scene
+        const cube = createCube(i);
+        scene.add(cube);
+    }
+
+    //creare basic cube setup
+    function createCube(seed) {
+        const geometry = new THREE.BoxGeometry();
+        const r = Math.floor(Math.random() * 255);
+        const g = Math.floor(Math.random() * 255);
+        const b = Math.floor(Math.random() * 255);
+        const color = new THREE.Color(`rgb(${r}, ${g}, ${b})`);
+        const material = new THREE.MeshBasicMaterial({color: color});
+        const cube = new THREE.Mesh(geometry, material);
+
+        const dx = Math.floor(Math.random() * 100) / 2000; //(between 0 to 0.05)
+        const dy = Math.floor(Math.random() * 100) / 2000; //(between 0 to 0.05)
+        const dz = Math.floor(Math.random() * 100) / 2000; //(between 0 to 0.05)
+
+        /* Using template we can refactor this code for easier usage
+        const myCube = entityMgr.add();
+        componentMgr.add(myCube, 'SceneObject', {sceneObject: cube});
+        componentMgr.add(myCube, 'Position', {x: 0, y: 0, z: 0});
+        componentMgr.add(myCube, 'Rotation', {rx: 0.01, ry: 0.01});
+        componentMgr.add(myCube, 'Velocity', {dx: dx, dy: dy, dz: dz});
+        componentMgr.add(myCube, 'Renderable');
+        */
+        const values = new Map()
+            .set('SceneObject',{sceneObject: cube})
+            .set('Velocity', {dx: dx, dy: dy, dz: dz} );
+        tplMgr.create('3Dbox', values);
+
+        return cube;
+    }
+
+    //animation loop
+    function animate() {
+        sysMgr.execute();
+        renderer.render(scene, camera);
+    }
+
+</script>
+</body>
+</html>
