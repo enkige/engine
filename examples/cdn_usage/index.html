@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <script src="../../build/enki-engine.script.js"></script>
+    <script src="https://unpkg.com/@enkige/engine@0.1.0/build/enki-engine.script.js"></script>
 
 </head>
 <body>
-<p>For a vanila javascript usagte of the ECS engine, please do the following:</p>
+<p>ECS is available on unpackg so you can use a cdn to insert it into yuor app if you prefer.</p>
 <pre>
     <code>
-        `&lt;script src="./enki-engine.script.js" &gt;``&lt;/script&gt;`
+        `&lt;script src="https://unpkg.com/@enkige/engine@0.1.0/build/enki-engine.script.js" &gt;``&lt;/script&gt;`
         `&lt;script&gt;`
-            //the library is available through the variable `EnkiEngine`
+            //the library is available through the variable `EnkiEngine` for native script javascript
             var myEngineInstance = EnkiEngine.default();
         `&lt;/script&gt;`
 
     </code>
 </pre>
 <p>This html file include a basic usage.<br/>
-    It create a single entity <br/>
+    It create a single entity<br/>
     Debug mode is enabled to output the different steps happening in the engine.
     Open your developer console to see them.</p>
 <script>
@@ -30,7 +30,6 @@
   const entityMgr = eng.EntityManager;
   //add a new entity
   const myEntity = entityMgr.add();
-
 </script>
 </body>
 </html>
