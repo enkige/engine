@@ -1,5 +1,5 @@
-import {isString, isArray, isNumber, isEnum, isAny} from '../../src/utils/validate';
-
+import {isString, isArray, isNumber, isEnum, isAny, isComponent, isMap, isSet} from '../../src/utils/validate';
+import {ValidationError} from '../../src/utils/errors';
 
 // testing isAny
 describe('isAny', () => {
@@ -70,6 +70,7 @@ describe('isEnum', () => {
 //testing array
 describe('isArray', () => {
   test('`[]` is an array of every type', () => {
+    expect(isArray([])).toBe(true);
     expect(isArray([],'string')).toBe(true);
     expect(isArray([],'number')).toBe(true);
     expect(isArray([],'mixed')).toBe(true);
@@ -98,7 +99,76 @@ describe('isArray', () => {
     expect(isArray(['test', 1], 'number')).toBe(false);
   });
   test('`object` is not a supported type for array', () => {
-    expect(() => isArray(['test', 1], 'object')).toThrow(TypeError);
+    expect(() => isArray(['test', 1], 'object')).toThrow(ValidationError);
   });
 })
 
+describe('isComponent', () => {
+  it('aceptes flag component', () => {
+    expect(isComponent({name:'test'})).toBe(true);
+  })
+
+  it('accepts component with data', () => {
+    const component = {
+      name: 'test',
+      data: {
+        test: {type:'number'}
+      }
+    }
+    expect(isComponent(component)).toBe(true);
+  })
+
+  it('rejects invalid components', () => {
+    const component = {
+      name: 'test',
+      data: 'test'
+    }
+    expect(isComponent({})).toBe(false);
+    expect(isComponent(component)).toBe(false);
+  })
+
+  it('rejects invalid type of data', () => {
+    let component = {
+      name: 'test',
+      data: {
+        test: {type:'unkonwn'}
+      }
+    }
+    expect(isComponent(component)).toBe(false);
+    component = {
+      name: 'test',
+      data: 1234
+    }
+    expect(isComponent(component)).toBe(false);
+
+  })
+})
+
+describe('isMap', () => {
+  it('accepts Map', () => {
+    expect(isMap(new Map())).toBe(true)
+    const m = new Map()
+    m.set('someKey','some value')
+    expect(isMap(m)).toBe(true)
+    expect(isMap(m, 'string')).toBe(true)
+  })
+
+  it('rejects non Map', () => {
+    expect(isMap(1234)).toBe(false);
+  })
+})
+
+describe('isSet', () => {
+  it('accepts Map', () => {
+    expect(isSet(new Set())).toBe(true)
+    const s = new Set()
+    s.add('somevalue')
+    expect(isSet(s)).toBe(true)
+    expect(isSet(s,'string')).toBe(true)
+  })
+
+
+  it('rejects non Set', () => {
+    expect(isSet(1234)).toBe(false);
+  })
+})
