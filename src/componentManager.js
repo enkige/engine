@@ -113,11 +113,16 @@ export const ComponentManager = (storage, verbose) => {
     return _registeredComponents.has(name);
   }
 
+  const dump = () => {
+    return {components: Array.from(_registeredComponents.values())}
+  }
+
   return {
     add,
     remove,
     register,
     list,
-    isRegistered
+    isRegistered,
+    dump
   };
 };
