@@ -619,11 +619,16 @@ const ComponentManager = (storage, verbose) => {
     return new Map(_registeredComponents)
   }
 
+  const isRegistered = (name) => {
+    return _registeredComponents.has(name);
+  }
+
   return {
     add,
     remove,
     register,
-    list
+    list,
+    isRegistered
   };
 };
 
@@ -708,7 +713,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _entityManager_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./entityManager.js */ "./src/entityManager.js");
 /* harmony import */ var _componentManager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./componentManager.js */ "./src/componentManager.js");
 /* harmony import */ var _systemManager_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./systemManager.js */ "./src/systemManager.js");
-/* harmony import */ var _storage_index_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./storage/index.js */ "./src/storage/index.js");
+/* harmony import */ var _templateManager__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./templateManager */ "./src/templateManager.js");
+/* harmony import */ var _storage_index_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./storage/index.js */ "./src/storage/index.js");
+
 
 
 
@@ -733,7 +740,7 @@ const Engine = ({storageType = 'MemoryStorage', mode = 'production', storageInst
   if(storageType == 'custom') {
     storage = storageInstance(verbose);
   } else {
-    storage = _storage_index_js__WEBPACK_IMPORTED_MODULE_3__["Storage"][storageType](verbose);
+    storage = _storage_index_js__WEBPACK_IMPORTED_MODULE_4__["Storage"][storageType](verbose);
   }
 
   const entityMgr = Object(_entityManager_js__WEBPACK_IMPORTED_MODULE_0__["EntityManager"])(storage, verbose);
@@ -742,17 +749,20 @@ const Engine = ({storageType = 'MemoryStorage', mode = 'production', storageInst
 
   const systemMgr = Object(_systemManager_js__WEBPACK_IMPORTED_MODULE_2__["SystemManager"])(storage, verbose);
 
+  const templateMgr = Object(_templateManager__WEBPACK_IMPORTED_MODULE_3__["TemplateManager"])(entityMgr, componentMgr,verbose);
+
   return {
     EntityManager: entityMgr,
     SystemManager: systemMgr,
     ComponentManager: componentMgr,
+    TemplateManager: templateMgr,
     Storage: storage
   }
 
 }
 
 /* harmony default export */ __webpack_exports__["default"] = (Engine);
-const _storage = _storage_index_js__WEBPACK_IMPORTED_MODULE_3__["Storage"];
+const _storage = _storage_index_js__WEBPACK_IMPORTED_MODULE_4__["Storage"];
 
 /***/ }),
 
@@ -1095,11 +1105,190 @@ const SystemManager = (storage, verbose) => {
 
 /***/ }),
 
+/***/ "./src/templateManager.js":
+/*!********************************!*\
+  !*** ./src/templateManager.js ***!
+  \********************************/
+/*! exports provided: TemplateManager */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TemplateManager", function() { return TemplateManager; });
+/* harmony import */ var _utils_errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils/errors */ "./src/utils/errors.js");
+/* harmony import */ var _utils_validate__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils/validate */ "./src/utils/validate.js");
+
+
+
+const TemplateManager = (entityMgr, componentMgr, verbose) => {
+    const _registeredTemplates = new Map()
+
+    const _log = (...$msg) => {
+        if (verbose) {
+            console.log('Template Manager: ', ...$msg);
+        }
+    };
+
+
+    /**
+     * Register a new Template for use
+     *
+     * @param {string} name - Name of the template, must be unique
+     * @param {Array} components - Array of Components used by this templates. Cannot be empty.
+     * @param {Map} defaultValues - Map of default Values for each components in `components` param. Key must be a component name.
+     * @param {boolean} registerComponents - If true, will register components if they are not already registered. if false, will fail registration of template if a component is not registered
+     * @returns {Boolean} - True if registered
+     *
+     * @throws ValidationError - Error if the templates is invalid
+     */
+    const register = (name, components, defaultValues = null, registerComponents = true) => {
+        _log('Registering template')
+
+        if (!Object(_utils_validate__WEBPACK_IMPORTED_MODULE_1__["isString"])(name)) {
+            throw new _utils_errors__WEBPACK_IMPORTED_MODULE_0__["ValidationError"]('Invalid name for template');
+        }
+
+        // check iof template already exists
+        if (_registeredTemplates.has(name)) {
+            throw new _utils_errors__WEBPACK_IMPORTED_MODULE_0__["ValidationError"]('A template with this name already exists.');
+        }
+
+        if (!Object(_utils_validate__WEBPACK_IMPORTED_MODULE_1__["isArray"])(components, 'components') || components.length == 0) {
+            throw new _utils_errors__WEBPACK_IMPORTED_MODULE_0__["ValidationError"]('Invalid components list');
+        }
+
+        // check if all components are registered, if not registered
+        for(let c of components) {
+            if(!componentMgr.isRegistered(c['name']) && registerComponents) {
+                componentMgr.register(c)
+            } else if (!componentMgr.isRegistered(c['name']) && !registerComponents) {
+                throw new _utils_errors__WEBPACK_IMPORTED_MODULE_0__["ValidationError"](`Component ${c['name']} is not registered.`);
+            }
+        }
+
+        if (defaultValues !== null && !Object(_utils_validate__WEBPACK_IMPORTED_MODULE_1__["isMap"])(defaultValues)) {
+            throw new _utils_errors__WEBPACK_IMPORTED_MODULE_0__["ValidationError"]('defaultValues must be a Map.');
+        }
+
+        _log('Template validation successful')
+
+        _registeredTemplates.set(name, {
+            name,
+            components,
+            defaultValues: defaultValues || new Map()
+        })
+
+
+        return true;
+    }
+
+    /**
+     *  Create an entity based on the given template
+     * @param {string} templateName - Name of the template to use
+     * @param {Map} values - Map of component values
+     * @param {string} [entityId] - Optional Entity Id to use during creation
+     * @returns {string} - Id of the entity added
+     *
+     * @throws ValidationError|Error
+     */
+    const create = (templateName, values, entityId) => {
+        if (!_registeredTemplates.has(templateName)) {
+            throw new _utils_errors__WEBPACK_IMPORTED_MODULE_0__["ValidationError"]('Template does not exist');
+        }
+
+        const template = _registeredTemplates.get(templateName);
+
+
+        const id = entityMgr.add(entityId)
+        for (let c of template['components']) {
+            try {
+                // prepare values for component
+                let v = {}
+                if(typeof values !== 'undefined') {
+                    v = values.get(c['name']);
+                }
+                const d = template['defaultValues'].get(c['name']) || {};
+                const data = Object.assign(d, v)
+
+                //add component to entity
+                componentMgr.add(id, c['name'], data)
+            } catch (err) {
+                //we need to delete the entity and all associated components
+                entityMgr.remove(id)
+                _log(`TemplateManager: Failed to add ${c['name']} component to entity.`)
+                _log(err.message)
+
+                //bubble up error
+                throw new Error(`TemplateManager: Failed to add ${c['name']} component to entity during creation.`)
+            }
+
+        }
+
+
+        return id;
+    }
+
+    /**
+     * Return a Map containing all registered templates
+     * @returns {Map<any, any>}
+     */
+    const list = () => {
+        return new Map(_registeredTemplates)
+    }
+
+    /**
+     * Remove a template.
+     * Removing a template does not remove existing enitties created with this template.
+     *
+     * @param {string} templateName - Name of the template to remove
+     * @returns {boolean} - True if template was removed
+     *
+     * @throws ValidationError
+     */
+    const remove = (templateName) => {
+        if (!_registeredTemplates.has(templateName)) {
+            throw new _utils_errors__WEBPACK_IMPORTED_MODULE_0__["ValidationError"]('Template does not exist');
+        }
+        return _registeredTemplates.delete(templateName);
+    }
+
+    return {
+        list,
+        register,
+        create,
+        remove
+    };
+};
+
+
+/***/ }),
+
+/***/ "./src/utils/errors.js":
+/*!*****************************!*\
+  !*** ./src/utils/errors.js ***!
+  \*****************************/
+/*! exports provided: ValidationError */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ValidationError", function() { return ValidationError; });
+class ValidationError extends Error {
+    constructor(message) {
+        super(message);
+
+        this.name = 'ValidationError';
+    }
+}
+
+
+/***/ }),
+
 /***/ "./src/utils/validate.js":
 /*!*******************************!*\
   !*** ./src/utils/validate.js ***!
   \*******************************/
-/*! exports provided: isNumber, isAny, isString, isEnum, isArray */
+/*! exports provided: isNumber, isAny, isString, isEnum, isArray, isMap, isSet, isComponent */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1109,57 +1298,125 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isString", function() { return isString; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isEnum", function() { return isEnum; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isArray", function() { return isArray; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isMap", function() { return isMap; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isSet", function() { return isSet; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isComponent", function() { return isComponent; });
+/* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./errors */ "./src/utils/errors.js");
+
 
 const isNumber = (value) => {
-  return !isNaN(value)
+    return !isNaN(value)
 }
 
 const isAny = (value) => {
-  if(typeof(value) !== 'undefined'){
-    return true;
-  }
-  return false;
+    if (typeof (value) !== 'undefined') {
+        return true;
+    }
+    return false;
 }
 
 const isString = (value) => {
-  if (typeof value === 'string' || value instanceof String) {
-    return true;
-  }
-  return false;
+    if (typeof value === 'string' || value instanceof String) {
+        return true;
+    }
+    return false;
 }
 
 const isEnum = (value, allowed) => {
-  return allowed.includes(value)
+    return allowed.includes(value)
 }
 
 const isArray = (value, type) => {
-  //check if array
-  const isArray = Array.isArray(value);
-  if(!isArray)  {
-    return false
-  }
-  //check type
+    //check if array
+    if (!Array.isArray(value)) {
+        return false
+    }
 
-  let res = false;
-  switch (type) {
-    case 'string':
-      res = value.reduce((acc,cur) => {
-        return acc && isString(cur)
-      }, true)
-      break;
-    case 'number':
-      res = value.reduce((acc,cur) => {
-        return acc && isNumber(cur)
-      }, true)
-      break;
-    case 'mixed' : res = true; break;
-    case 'any': res = true; break;
-    default:
-      throw new TypeError(`Type ${type} not supported in Array`);
-  }
-  return res;
+    //not checking types
+    if(typeof type == 'undefined') {
+        return true
+    }
+
+    //check type
+    let res = false;
+    switch (type) {
+        case 'string':
+            res = value.reduce((acc, cur) => {
+                return acc && isString(cur)
+            }, true)
+            break;
+        case 'number':
+            res = value.reduce((acc, cur) => {
+                return acc && isNumber(cur)
+            }, true)
+            break;
+        case 'components':
+            res = value.reduce((acc, cur) => {
+                return acc && isComponent(cur)
+            }, true)
+            break;
+        case 'mixed' :
+            res = true;
+            break;
+        case 'any':
+            res = true;
+            break;
+        default:
+            throw new _errors__WEBPACK_IMPORTED_MODULE_0__["ValidationError"](`Type ${type} not supported in Array`);
+    }
+    return res;
 }
 
+const isMap = (value, type) => {
+    if (! (value instanceof Map)) {
+        return false
+    }
+
+    let values = Array.from(value.values())
+
+    return isArray(values, type)
+
+}
+
+const isSet = (value, type) => {
+    if (! (value instanceof Set)) {
+        return false
+    }
+
+    let values = Array.from(value.values())
+
+    return isArray(values, type)
+}
+
+const isComponent = (value) => {
+    if (!value.hasOwnProperty('name')) {
+        return false;
+    }
+
+    // data is optional because we can have flag components
+    // but if we have data, it must have the correct structure
+    if (value.hasOwnProperty('data')) {
+        //check if data is an object and make sure all entries have a type property defined.
+        const data = Object.entries(value.data);
+        //if value.data is not iterable, then it returns an empty array
+        if (data.length == 0) {
+            return false
+        }
+        //check that the actual values of data are correct.
+        return data.reduce((acc, cur) => {
+            return acc
+                && cur.length > 1
+                && isString(cur[0]) // property key must be a string
+                && cur[1].hasOwnProperty('type') // value of each data must contain a `type` property
+                && isEnum(cur[1]['type'], ['string', 'number', 'any', 'mixed']) // check if `type` is supported
+        }, true)
+        
+    }
+
+    return true;
+
+
+}
 
 /***/ }),
 

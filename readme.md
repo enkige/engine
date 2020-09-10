@@ -268,6 +268,7 @@ Then you can access the example at the following url:
 We will try to keep this list updated but the best way to check examples available is to go to the [examples](./examples) folder.
 
 * `basic.js`: a basic example of creating systems and components
+* `cdn_usage`: an example to get Enki Engine from unpackg CDN
 * `html_script_usage`: a basic browser example to show how to use EnkiEngine without ES6 modules.
 * `react_state_storage`: a very simple custom storage example using React state
 * `three.js`: a basic example to integrate three.js rendering engine with 1000 entities.  

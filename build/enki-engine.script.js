@@ -959,11 +959,16 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       return new Map(_registeredComponents);
     };
 
+    var isRegistered = function isRegistered(name) {
+      return _registeredComponents.has(name);
+    };
+
     return {
       add: add,
       remove: remove,
       register: register,
-      list: list
+      list: list,
+      isRegistered: isRegistered
     };
   };
 
@@ -1063,12 +1068,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
   if (true) {
-    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports, __webpack_require__(/*! ./entityManager.js */ "./src/entityManager.js"), __webpack_require__(/*! ./componentManager.js */ "./src/componentManager.js"), __webpack_require__(/*! ./systemManager.js */ "./src/systemManager.js"), __webpack_require__(/*! ./storage/index.js */ "./src/storage/index.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports, __webpack_require__(/*! ./entityManager.js */ "./src/entityManager.js"), __webpack_require__(/*! ./componentManager.js */ "./src/componentManager.js"), __webpack_require__(/*! ./systemManager.js */ "./src/systemManager.js"), __webpack_require__(/*! ./templateManager */ "./src/templateManager.js"), __webpack_require__(/*! ./storage/index.js */ "./src/storage/index.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
   } else { var mod; }
-})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports, _entityManager, _componentManager, _systemManager, _index) {
+})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports, _entityManager, _componentManager, _systemManager, _templateManager, _index) {
   "use strict";
 
   Object.defineProperty(_exports, "__esModule", {
@@ -1113,10 +1118,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     var entityMgr = (0, _entityManager.EntityManager)(storage, verbose);
     var componentMgr = (0, _componentManager.ComponentManager)(storage, verbose);
     var systemMgr = (0, _systemManager.SystemManager)(storage, verbose);
+    var templateMgr = (0, _templateManager.TemplateManager)(entityMgr, componentMgr, verbose);
     return {
       EntityManager: entityMgr,
       SystemManager: systemMgr,
       ComponentManager: componentMgr,
+      TemplateManager: templateMgr,
       Storage: storage
     };
   };
@@ -1623,10 +1630,218 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 /***/ }),
 
-/***/ "./src/utils/validate.js":
-/*!*******************************!*\
-  !*** ./src/utils/validate.js ***!
-  \*******************************/
+/***/ "./src/templateManager.js":
+/*!********************************!*\
+  !*** ./src/templateManager.js ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
+  if (true) {
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports, __webpack_require__(/*! ./utils/errors */ "./src/utils/errors.js"), __webpack_require__(/*! ./utils/validate */ "./src/utils/validate.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else { var mod; }
+})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports, _errors, _validate) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.TemplateManager = void 0;
+
+  function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+  function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+  function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+  var TemplateManager = function TemplateManager(entityMgr, componentMgr, verbose) {
+    var _registeredTemplates = new Map();
+
+    var _log = function _log() {
+      if (verbose) {
+        var _console;
+
+        for (var _len = arguments.length, $msg = new Array(_len), _key = 0; _key < _len; _key++) {
+          $msg[_key] = arguments[_key];
+        }
+
+        (_console = console).log.apply(_console, ['Template Manager: '].concat($msg));
+      }
+    };
+    /**
+     * Register a new Template for use
+     *
+     * @param {string} name - Name of the template, must be unique
+     * @param {Array} components - Array of Components used by this templates. Cannot be empty.
+     * @param {Map} defaultValues - Map of default Values for each components in `components` param. Key must be a component name.
+     * @param {boolean} registerComponents - If true, will register components if they are not already registered. if false, will fail registration of template if a component is not registered
+     * @returns {Boolean} - True if registered
+     *
+     * @throws ValidationError - Error if the templates is invalid
+     */
+
+
+    var register = function register(name, components) {
+      var defaultValues = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+      var registerComponents = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
+
+      _log('Registering template');
+
+      if (!(0, _validate.isString)(name)) {
+        throw new _errors.ValidationError('Invalid name for template');
+      } // check iof template already exists
+
+
+      if (_registeredTemplates.has(name)) {
+        throw new _errors.ValidationError('A template with this name already exists.');
+      }
+
+      if (!(0, _validate.isArray)(components, 'components') || components.length == 0) {
+        throw new _errors.ValidationError('Invalid components list');
+      } // check if all components are registered, if not registered
+
+
+      var _iterator = _createForOfIteratorHelper(components),
+          _step;
+
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var c = _step.value;
+
+          if (!componentMgr.isRegistered(c['name']) && registerComponents) {
+            componentMgr.register(c);
+          } else if (!componentMgr.isRegistered(c['name']) && !registerComponents) {
+            throw new _errors.ValidationError("Component ".concat(c['name'], " is not registered."));
+          }
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+
+      if (defaultValues !== null && !(0, _validate.isMap)(defaultValues)) {
+        throw new _errors.ValidationError('defaultValues must be a Map.');
+      }
+
+      _log('Template validation successful');
+
+      _registeredTemplates.set(name, {
+        name: name,
+        components: components,
+        defaultValues: defaultValues || new Map()
+      });
+
+      return true;
+    };
+    /**
+     *  Create an entity based on the given template
+     * @param {string} templateName - Name of the template to use
+     * @param {Map} values - Map of component values
+     * @param {string} [entityId] - Optional Entity Id to use during creation
+     * @returns {string} - Id of the entity added
+     *
+     * @throws ValidationError|Error
+     */
+
+
+    var create = function create(templateName, values, entityId) {
+      if (!_registeredTemplates.has(templateName)) {
+        throw new _errors.ValidationError('Template does not exist');
+      }
+
+      var template = _registeredTemplates.get(templateName);
+
+      var id = entityMgr.add(entityId);
+
+      var _iterator2 = _createForOfIteratorHelper(template['components']),
+          _step2;
+
+      try {
+        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+          var c = _step2.value;
+
+          try {
+            // prepare values for component
+            var v = {};
+
+            if (typeof values !== 'undefined') {
+              v = values.get(c['name']);
+            }
+
+            var d = template['defaultValues'].get(c['name']) || {};
+            var data = Object.assign(d, v); //add component to entity
+
+            componentMgr.add(id, c['name'], data);
+          } catch (err) {
+            //we need to delete the entity and all associated components
+            entityMgr.remove(id);
+
+            _log("TemplateManager: Failed to add ".concat(c['name'], " component to entity."));
+
+            _log(err.message); //bubble up error
+
+
+            throw new Error("TemplateManager: Failed to add ".concat(c['name'], " component to entity during creation."));
+          }
+        }
+      } catch (err) {
+        _iterator2.e(err);
+      } finally {
+        _iterator2.f();
+      }
+
+      return id;
+    };
+    /**
+     * Return a Map containing all registered templates
+     * @returns {Map<any, any>}
+     */
+
+
+    var list = function list() {
+      return new Map(_registeredTemplates);
+    };
+    /**
+     * Remove a template.
+     * Removing a template does not remove existing enitties created with this template.
+     *
+     * @param {string} templateName - Name of the template to remove
+     * @returns {boolean} - True if template was removed
+     *
+     * @throws ValidationError
+     */
+
+
+    var remove = function remove(templateName) {
+      if (!_registeredTemplates.has(templateName)) {
+        throw new _errors.ValidationError('Template does not exist');
+      }
+
+      return _registeredTemplates["delete"](templateName);
+    };
+
+    return {
+      list: list,
+      register: register,
+      create: create,
+      remove: remove
+    };
+  };
+
+  _exports.TemplateManager = TemplateManager;
+});
+
+/***/ }),
+
+/***/ "./src/utils/errors.js":
+/*!*****************************!*\
+  !*** ./src/utils/errors.js ***!
+  \*****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1643,7 +1858,76 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
   Object.defineProperty(_exports, "__esModule", {
     value: true
   });
-  _exports.isArray = _exports.isEnum = _exports.isString = _exports.isAny = _exports.isNumber = void 0;
+  _exports.ValidationError = void 0;
+
+  function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+  function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+  function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+  function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+  function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+  function _wrapNativeSuper(Class) { var _cache = typeof Map === "function" ? new Map() : undefined; _wrapNativeSuper = function _wrapNativeSuper(Class) { if (Class === null || !_isNativeFunction(Class)) return Class; if (typeof Class !== "function") { throw new TypeError("Super expression must either be null or a function"); } if (typeof _cache !== "undefined") { if (_cache.has(Class)) return _cache.get(Class); _cache.set(Class, Wrapper); } function Wrapper() { return _construct(Class, arguments, _getPrototypeOf(this).constructor); } Wrapper.prototype = Object.create(Class.prototype, { constructor: { value: Wrapper, enumerable: false, writable: true, configurable: true } }); return _setPrototypeOf(Wrapper, Class); }; return _wrapNativeSuper(Class); }
+
+  function _construct(Parent, args, Class) { if (_isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
+
+  function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+  function _isNativeFunction(fn) { return Function.toString.call(fn).indexOf("[native code]") !== -1; }
+
+  function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+  function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+  var ValidationError = /*#__PURE__*/function (_Error) {
+    _inherits(ValidationError, _Error);
+
+    var _super = _createSuper(ValidationError);
+
+    function ValidationError(message) {
+      var _this;
+
+      _classCallCheck(this, ValidationError);
+
+      _this = _super.call(this, message);
+      _this.name = 'ValidationError';
+      return _this;
+    }
+
+    return ValidationError;
+  }( /*#__PURE__*/_wrapNativeSuper(Error));
+
+  _exports.ValidationError = ValidationError;
+});
+
+/***/ }),
+
+/***/ "./src/utils/validate.js":
+/*!*******************************!*\
+  !*** ./src/utils/validate.js ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
+  if (true) {
+    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [exports, __webpack_require__(/*! ./errors */ "./src/utils/errors.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+  } else { var mod; }
+})(typeof globalThis !== "undefined" ? globalThis : typeof self !== "undefined" ? self : this, function (_exports, _errors) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.isComponent = _exports.isSet = _exports.isMap = _exports.isArray = _exports.isEnum = _exports.isString = _exports.isAny = _exports.isNumber = void 0;
 
   var isNumber = function isNumber(value) {
     return !isNaN(value);
@@ -1679,10 +1963,13 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
   var isArray = function isArray(value, type) {
     //check if array
-    var isArray = Array.isArray(value);
-
-    if (!isArray) {
+    if (!Array.isArray(value)) {
       return false;
+    } //not checking types
+
+
+    if (typeof type == 'undefined') {
+      return true;
     } //check type
 
 
@@ -1701,6 +1988,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         }, true);
         break;
 
+      case 'components':
+        res = value.reduce(function (acc, cur) {
+          return acc && isComponent(cur);
+        }, true);
+        break;
+
       case 'mixed':
         res = true;
         break;
@@ -1710,13 +2003,63 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
         break;
 
       default:
-        throw new TypeError("Type ".concat(type, " not supported in Array"));
+        throw new _errors.ValidationError("Type ".concat(type, " not supported in Array"));
     }
 
     return res;
   };
 
   _exports.isArray = isArray;
+
+  var isMap = function isMap(value, type) {
+    if (!(value instanceof Map)) {
+      return false;
+    }
+
+    var values = Array.from(value.values());
+    return isArray(values, type);
+  };
+
+  _exports.isMap = isMap;
+
+  var isSet = function isSet(value, type) {
+    if (!(value instanceof Set)) {
+      return false;
+    }
+
+    var values = Array.from(value.values());
+    return isArray(values, type);
+  };
+
+  _exports.isSet = isSet;
+
+  var isComponent = function isComponent(value) {
+    if (!value.hasOwnProperty('name')) {
+      return false;
+    } // data is optional because we can have flag components
+    // but if we have data, it must have the correct structure
+
+
+    if (value.hasOwnProperty('data')) {
+      //check if data is an object and make sure all entries have a type property defined.
+      var data = Object.entries(value.data); //if value.data is not iterable, then it returns an empty array
+
+      if (data.length == 0) {
+        return false;
+      } //check that the actual values of data are correct.
+
+
+      return data.reduce(function (acc, cur) {
+        return acc && cur.length > 1 && isString(cur[0]) // property key must be a string
+        && cur[1].hasOwnProperty('type') // value of each data must contain a `type` property
+        && isEnum(cur[1]['type'], ['string', 'number', 'any', 'mixed']); // check if `type` is supported
+      }, true);
+    }
+
+    return true;
+  };
+
+  _exports.isComponent = isComponent;
 });
 
 /***/ })
