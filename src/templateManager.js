@@ -133,10 +133,54 @@ export const TemplateManager = (entityMgr, componentMgr, verbose) => {
         return _registeredTemplates.delete(templateName);
     }
 
+    /**
+     * Load several templates and entities in one go from an object
+     *
+     * @param {object} schema - Object
+     */
+    const load = (data) => {
+        try {
+            if(data.hasOwnProperty('templates')) {
+                // register all templates
+                _log('Loading templates')
+                for( let t of data['templates']) {
+                    register(t['name'], t['components'], t['defaultValues'])
+                }
+            } else {
+                _log('Your object must contains a `templates` property');
+                return false
+            }
+        } catch(err) {
+            _log(err);
+            console.error(err);
+            throw err;
+        }
+        return true
+    }
+
+    /**
+     * Dump all templates and template entities into an object
+     */
+    const dump = () => {
+        const data = {
+            templates: [],
+        }
+
+        // dump templates
+        _registeredTemplates.forEach((t) => {
+            data['templates'].push(t);
+        })
+
+        return data;
+
+    }
+
     return {
         list,
         register,
         create,
-        remove
+        remove,
+        dump,
+        load
     };
 };
