@@ -55,7 +55,6 @@ export const EntityManager = (storage) => {
         };
         const entities = list();
         for (let e of entities) {
-            console.log(e)
             const entity = get(e)
             const en = {
                 id: e,
