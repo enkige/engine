@@ -16,6 +16,14 @@
     "type": "git",
     "url": "https://github.com/enkige/engine"
   },
+  "keywords": [
+    "ecs",
+    "game",
+    "engine",
+    "entity",
+    "component",
+    "system"
+  ],
   "dependencies": {
     "uuid": "^8.2.0"
   },
