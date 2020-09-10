@@ -55,10 +55,11 @@ export const EntityManager = (storage) => {
         };
         const entities = list();
         for (let e of entities) {
+            console.log(e)
             const entity = get(e)
             const en = {
                 id: e,
-                components: Array.from(entity.values())
+                components: Array.from(entity['components'].values())
             }
             data['entities'].push(en);
         }

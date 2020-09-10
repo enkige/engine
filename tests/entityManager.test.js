@@ -1,21 +1,18 @@
 import {EntityManager} from '../src/entityManager';
 
 const mockStorage = {
-    _entity: null,
+    _entity: new Set(),
     addEntity: jest.fn((id) => {
-        mockStorage._entity = id;
+        mockStorage._entity.add(id);
     }),
     removeEntity: jest.fn(() => {
         return true;
     }),
-    getEntity: jest.fn(() => {
-        return mockStorage._entity;
+    getEntity: jest.fn((id) => {
+        if(mockStorage._entity.has(id)) return id;
     }),
     getEntities: jest.fn(() => {
-        const e = new Set();
-        e.add('test')
-        e.add('test2')
-        return e;
+        return mockStorage._entity
     }),
     addEntityComponent: jest.fn(),
     removeEntityComponent: jest.fn(),
@@ -27,14 +24,17 @@ describe('Entity Manager', () => {
 
     it('Initialise Entity Manager return an object of functions', () => {
         const em = EntityManager(mockStorage,false);
+        mockStorage._entity = new Set()
         expect(em).toHaveProperty('add');
         expect(em).toHaveProperty('get');
         expect(em).toHaveProperty('list');
         expect(em).toHaveProperty('remove');
+        expect(em).toHaveProperty('dump');
     })
 
     it('add an entity', () => {
         const em = EntityManager(mockStorage,false);
+        mockStorage._entity = new Set()
         const e = em.add();
         expect(mockStorage.addEntity).toHaveBeenCalledWith(e);
 
@@ -45,13 +45,18 @@ describe('Entity Manager', () => {
 
     it('gets entity by id', () => {
         const em = EntityManager(mockStorage,false);
+        mockStorage._entity = new Set()
         const e = em.add();
-        const res = em.get(e);
-        expect(res).toEqual({id:e, components: new Set()});
+        expect(em.get(e)).toEqual({id:e, components: new Set()});
+        expect(em.get(1234)).toBeUndefined()
+
     })
 
     it('lists all entities', () => {
         const em = EntityManager(mockStorage,false);
+        mockStorage._entity = new Set()
+        em.add('test');
+        em.add('test2');
         const res = em.list();
         expect(res.next().value).toEqual('test');
 
@@ -59,9 +64,23 @@ describe('Entity Manager', () => {
 
     it('removes entity', () => {
         const em = EntityManager(mockStorage,false);
+        mockStorage._entity = new Set()
         const res =  em.remove(1);
         expect(mockStorage.removeEntity).toHaveBeenCalledWith(1);
         expect(res).toBe(true);
+    })
+
+    it('dumps entities', () => {
+        const em = EntityManager(mockStorage,false);
+        mockStorage._entity = new Set()
+        em.add('test');
+        em.add('test2');
+
+        const expected =  {
+                entities: [ { id: 'test', components: [] }, { id: 'test2', components: [] } ]
+            }
+        ;
+        expect(em.dump()).toEqual(expected);
     })
 
 })
