@@ -9,7 +9,7 @@ It is highly inspired from the ECSY framework made by Mozila.
 Enki Engine in a few points:  
 
 * __Easy to understand and get started__ with examples provided with major rendering engine like THREE.JS
-* Native javascript with __very small footprint__. The build is around 30-60kb depending on platforms.
+* Native javascript with __very small footprint__. The build is around 80kb depending on platforms.
 * __Crossplatforms__ support: 
     * Browser: Chrome, Safari, Firefox, Edge (usually last 3 versions only)
     * ECMAScript Modules, play well with React and other framework
@@ -77,6 +77,39 @@ You can use the following snippet to register a component:
      );
     
 See the [examples](./examples) folder for some complex examples of custom components.
+### Using Templates
+In most softwares and games, you will reuse the same types of entity with the same list of components attached to it. 
+Enki Engine has a notion of templates that makes this easier. A template consist of a unique name, a list of component and their associated default values. 
+Templates take care of registration components for you and make creating several entities with the same component easier.
+
+For example, a 3D entity object may have a few components like: 
+* position
+* velocity
+* renderable
+
+You could set them up with the Entity and Component Manager or you can create a template as followed: 
+
+    import {Position, Velocity, Renderable} from './components.js';
+    //we don't register components and only register template
+    const eng = EnkiEngine.default();
+
+    // get template manager
+    const tplMgr = eng.TemplateManager;
+    // prepare default values
+    const dv = new Map()
+        .set('Position', {x: 0, y: 0, z: 0})
+    //register new template
+    tplMgr.register('3Dobject', [Position, Velocity, Renderable], dv);
+    const values = new Map()
+                .set('Velocity', {dx: dx, dy: dy, dz: dz} );
+    const entity1 = tplMgr.create('3Dobject', values);
+    const entity2 = tplMgr.create('3Dobject', values);
+    const entity3 = tplMgr.create('3Dobject', values);
+    
+
+See the full example ['./examples/three.js/template_example.html']('./examples/three.js/template_example.html') and
+ compare it with non template code ['./examples/three.js/index.html']('./examples/three.js/index.html')
+    
 
 ### Create a System
 
@@ -235,6 +268,7 @@ Then you can access the example at the following url:
 We will try to keep this list updated but the best way to check examples available is to go to the [examples](./examples) folder.
 
 * `basic.js`: a basic example of creating systems and components
+* `cdn_usage`: an example to get Enki Engine from unpackg CDN
 * `html_script_usage`: a basic browser example to show how to use EnkiEngine without ES6 modules.
 * `react_state_storage`: a very simple custom storage example using React state
 * `three.js`: a basic example to integrate three.js rendering engine with 1000 entities.  

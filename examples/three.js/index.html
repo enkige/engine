@@ -29,6 +29,8 @@
   componentMgr.register(SceneObject);
   componentMgr.register(Velocity);
   componentMgr.register(Rotation);
+  componentMgr.register(Renderable);
+
   //get entity manager
   const entityMgr = eng.EntityManager;
   // get system manager
@@ -61,9 +63,9 @@
   //creare basic cube setup
   function createCube(seed) {
     const geometry = new THREE.BoxGeometry();
-    const r = Math.floor(Math.random() * 255) ;
-    const g = Math.floor(Math.random() * 255) ;
-    const b = Math.floor(Math.random() * 255) ;
+    const r = Math.floor(Math.random() * 255);
+    const g = Math.floor(Math.random() * 255);
+    const b = Math.floor(Math.random() * 255);
     const color = new THREE.Color(`rgb(${r}, ${g}, ${b})`);
     const material = new THREE.MeshBasicMaterial({color: color});
     const cube = new THREE.Mesh(geometry, material);

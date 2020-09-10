@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.2.0
+
+* Add Template feature
+
 ## Version 0.1.0
 
 * __Breaking Change__:
