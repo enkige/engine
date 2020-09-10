@@ -144,7 +144,7 @@ export const TemplateManager = (entityMgr, componentMgr, verbose) => {
                 // register all templates
                 _log('Loading templates')
                 for( let t of data['templates']) {
-                    register(t['name'], t['components'], t['defaultValues'])
+                    register(t['name'], t['components'], new Map(Object.entries(t['defaultValues'])))
                 }
             } else {
                 _log('Your object must contains a `templates` property');
@@ -152,8 +152,7 @@ export const TemplateManager = (entityMgr, componentMgr, verbose) => {
             }
         } catch(err) {
             _log(err);
-            console.error(err);
-            throw err;
+            throw new Error('Not able to load templates because of malformed data.');
         }
         return true
     }
@@ -168,7 +167,12 @@ export const TemplateManager = (entityMgr, componentMgr, verbose) => {
 
         // dump templates
         _registeredTemplates.forEach((t) => {
-            data['templates'].push(t);
+
+            data['templates'].push({
+                name: t['name'],
+                components: t['components'],
+                defaultValues: Object.fromEntries(t['defaultValues'])
+            });
         })
 
         return data;

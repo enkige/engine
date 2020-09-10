@@ -131,4 +131,46 @@ describe('Template Manager', () => {
         expect(() => {templateMgr.create('unknown')}).toThrow(new Error('Template does not exist'))
 
     })
+
+    it('dumps and load templates', () => {
+        const templateMgr = TemplateManager(mockEntityMgr, mockComponentMgr)
+        let components = [
+            {
+                name: 'test',
+                data: {
+                    test: {type: 'string'}
+                }
+            },
+            {
+                name: 'test2'
+            }
+        ]
+        const defaultValues = new Map()
+        defaultValues.set('test', 'this is my value');
+
+        templateMgr.register('myTemplate', components, defaultValues);
+
+        const expectedDmp =   {
+            templates: [
+                {
+                    name: 'myTemplate',
+                    components: components,
+                    defaultValues: {
+                        'test': 'this is my value'
+                    }
+                }
+            ]
+        }
+        const dmp = templateMgr.dump()
+        expect(dmp).toEqual(expectedDmp)
+        const templateMgr2 = TemplateManager(mockEntityMgr, mockComponentMgr)
+        expect(templateMgr2.load(dmp)).toBe(true);
+        expect(templateMgr2.dump()).toEqual(expectedDmp);
+        expect(templateMgr2.load({})).toBe(false);
+        const wrongLoad = { templates: [{}]}
+        expect(() => templateMgr2.load(wrongLoad)).toThrow(new Error('Not able to load templates because of malformed data.'));
+
+
+    })
+
 })
