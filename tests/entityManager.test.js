@@ -1,11 +1,16 @@
 import {EntityManager} from '../src/entityManager';
 
 const mockStorage = {
-    addEntity: jest.fn(),
+    _entity: null,
+    addEntity: jest.fn((id) => {
+        mockStorage._entity = id;
+    }),
     removeEntity: jest.fn(() => {
         return true;
     }),
-    getEntity: jest.fn(),
+    getEntity: jest.fn(() => {
+        return mockStorage._entity;
+    }),
     getEntities: jest.fn(() => {
         const e = new Set();
         e.add('test')
@@ -15,7 +20,7 @@ const mockStorage = {
     addEntityComponent: jest.fn(),
     removeEntityComponent: jest.fn(),
     getEntityByComponents: jest.fn(),
-    getEntityComponents: jest.fn()
+    getEntityComponents: jest.fn(() => {return new Set()})
 }
 
 describe('Entity Manager', () => {
@@ -42,7 +47,7 @@ describe('Entity Manager', () => {
         const em = EntityManager(mockStorage,false);
         const e = em.add();
         const res = em.get(e);
-        expect(res).toEqual(e);
+        expect(res).toEqual({id:e, components: new Set()});
     })
 
     it('lists all entities', () => {

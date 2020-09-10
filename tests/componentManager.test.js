@@ -192,7 +192,6 @@ describe('dump registered components', () => {
             ]
         }
         const res =  cm.dump();
-        console.log(res)
         expect(cm.dump()).toEqual(result)
     })
 
