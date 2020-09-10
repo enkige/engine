@@ -24,13 +24,20 @@ export const EntityManager = (storage) => {
   };
 
   /**
-   * Retrieve an entity
+   * Retrieve an entity and its components
    * @param {*} id - Entity Id
-   * @returns {*} - Entity Id if it exists. Undefined if it does not exists
+   * @returns {{id:string, components: Map}} - Entity Object with id and components. Undefined if it does not exists
    */
   const get = (id) => {
-    _storage.getEntity(id);
-    return id;
+    const eid = _storage.getEntity(id);
+    if(typeof eid == 'undefined') {
+      return;
+    }
+    const components = _storage.getEntityComponents(eid)
+    return {
+      id: eid,
+      components: components
+    };
   };
 
   /**
