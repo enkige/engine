@@ -1,6 +1,6 @@
 {
   "name": "@enkige/engine",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Engine based on ECS for Enki",
   "main": "build/enki-engine.node.js",
   "browser": "src/index.js",
