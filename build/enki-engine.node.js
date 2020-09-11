@@ -512,124 +512,162 @@ __webpack_require__.r(__webpack_exports__);
 
 const ComponentManager = (storage, verbose) => {
 
-  const _storage = storage;
-  const _registeredComponents = new Map();
+    const _storage = storage;
+    const _registeredComponents = new Map();
 
-  const _log = (...$msg) => {
-    if (verbose) {
-      console.log('Component Manager: ', ...$msg);
+    const _log = (...$msg) => {
+        if (verbose) {
+            console.log('Component Manager: ', ...$msg);
+        }
+    };
+
+    const _validate = (ComponentId, componentValue) => {
+        //check if component is registered
+        const c = _registeredComponents.get(ComponentId);
+        if (typeof c === 'undefined') {
+            _log(`Component ${ComponentId} is not registered`);
+            return false;
+        }
+
+        //check if values are correct
+        for (let [k, v] of Object.entries(c)) {
+            const validateFunctionName = 'is' + v['type'].charAt(0).toUpperCase() + v['type'].slice(1);
+            //if value is not passed and we have a default or value is optional then we are good
+            if (typeof componentValue[k] === 'undefined' && (
+                (typeof (v.optional) !== 'undefined' && v.optional === true) ||
+                typeof (v.default) !== 'undefined')
+            ) {
+                continue;
+            }
+            // 'any' type of data is not validated.
+            if (v.type == 'any') {
+                continue;
+            }
+            //we have a value so we test
+            let args = [];
+            if (v.type == 'enum') {
+                args.push(v.allowed);
+            }
+            if (v.type == 'array') {
+                args.push(v.childType);
+            }
+            if (!_utils_validate__WEBPACK_IMPORTED_MODULE_0__[validateFunctionName](componentValue[k], ...args)) {
+                _log(`${k} => ${componentValue[k]} failed the validation ${validateFunctionName}`);
+                return false;
+            }
+        }
+
+        //check if extra non existent property were passed to component
+        const defaultSchema = Object.keys(c);
+        for (const k of Object.keys(componentValue)) {
+            if (!defaultSchema.includes(k)) {
+                _log(`${k} is not a valid property for the ${ComponentId} Component.`);
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    /**
+     * Add a Component to an existing entity
+     * @param {any} entityId - Entity Id
+     * @param {string} ComponentId - Component type to add
+     * @param {object} value - Object following the data structure of component to pass initial values to component
+     * @returns {boolean} True if succesfull else false
+     */
+    const add = (entityId, ComponentName, value = {}) => {
+        if (_validate(ComponentName, value)) {
+            const c = _registeredComponents.get(ComponentName);
+            const defaultValues = Object.fromEntries(Object.entries(c).map(([k, v]) => {
+                return [k, v.default];
+            }));
+            _storage.addEntityComponent(entityId, ComponentName, Object.assign(defaultValues, value));
+            return true;
+        } else {
+            _log(`Component ${ComponentName} could not added to ${entityId} due to fail validation.`);
+            return false;
+        }
+    };
+
+    /**
+     * Remove a component from an existing Entity
+     * @param {any} entityId - Entity Id
+     * @param {string} ComponentName - Component to remove
+     * @returns {boolean} - True if successfull else false
+     */
+    const remove = (entityId, ComponentName) => {
+        return _storage.removeEntityComponent(entityId, ComponentName);
+    };
+
+    /**
+     * Register a new component type
+     * @param {object} componentSchema
+     * @returns {boolean} - True if successfull, else false
+     */
+    const register = (componentSchema) => {
+        if (!componentSchema.hasOwnProperty('name')) {
+            return false;
+        }
+        _log(`Registering ${componentSchema.name} Component`)
+        const data = componentSchema.data || {};
+        _registeredComponents.set(componentSchema.name, data);
+        return true;
+    };
+
+    const list = () => {
+        return new Map(_registeredComponents)
     }
-  };
 
-  const _validate = (ComponentId, componentValue) => {
-    //check if component is registered
-    const c = _registeredComponents.get(ComponentId);
-    if (typeof c === 'undefined') {
-      _log(`Component ${ComponentId} is not registered`);
-      return false;
+    const isRegistered = (name) => {
+        return _registeredComponents.has(name);
     }
 
-    //check if values are correct
-    for (let [k, v] of Object.entries(c)) {
-      const validateFunctionName = 'is' + v['type'].charAt(0).toUpperCase() + v['type'].slice(1);
-      //if value is not passed and we have a default or value is optional then we are good
-      if (typeof componentValue[k] === 'undefined' && (
-        (typeof (v.optional) !== 'undefined' && v.optional === true) ||
-        typeof (v.default) !== 'undefined')
-      ) {
-        continue;
-      }
-      // 'any' type of data is not validated.
-      if(v.type == 'any'){
-        continue;
-      }
-      //we have a value so we test
-      let args = [];
-      if(v.type == 'enum') {
-        args.push(v.allowed);
-      }
-      if(v.type == 'array'){
-        args.push(v.childType);
-      }
-      if (!_utils_validate__WEBPACK_IMPORTED_MODULE_0__[validateFunctionName](componentValue[k],...args)) {
-        _log(`${k} => ${componentValue[k]} failed the validation ${validateFunctionName}`);
-        return false;
-      }
+    const dump = () => {
+        const res = []
+        _registeredComponents.forEach((data, name) => {
+            if (Object.keys(data).length === 0 && data.constructor === Object) {
+                res.push({name})
+            } else {
+                res.push({
+                    name: name,
+                    data: data
+                })
+            }
+
+        })
+        return {components: res};
     }
 
-    //check if extra non existent property were passed to component
-    const defaultSchema = Object.keys(c);
-    for (const k of Object.keys(componentValue)) {
-      if (!defaultSchema.includes(k)) {
-        _log(`${k} is not a valid property for the ${ComponentId} Component.`);
-        return false;
-      }
+    const load = (data) => {
+        if (!data.hasOwnProperty('components')) {
+            return false
+        }
+        //register all components
+        for (let c of data['components']) {
+            register(c)
+        }
+        
+        // add all components to dumped entities
+        if (data.hasOwnProperty('entities')) {
+            for (let e of data['entities']) {
+                for (let c of e['components']) {
+                    add(e['id'], c['name'], c['data'])
+                }
+            }
+        }
+        return true
     }
 
-    return true;
-  };
-
-  /**
-   * Add a Component to an existing entity
-   * @param {any} entityId - Entity Id
-   * @param {string} ComponentId - Component type to add
-   * @param {object} value - Object following the data structure of component to pass initial values to component
-   * @returns {boolean} True if succesfull else false
-   */
-  const add = (entityId, ComponentName, value = {}) => {
-    if (_validate(ComponentName, value)) {
-      const c = _registeredComponents.get(ComponentName);
-      const defaultValues = Object.fromEntries(Object.entries(c).map(([k, v]) => {
-        return [k, v.default];
-      }));
-      _storage.addEntityComponent(entityId, ComponentName, Object.assign(defaultValues, value));
-      return true;
-    } else {
-      _log(`Component ${ComponentName} could not added to ${entityId} due to fail validation.`);
-      return false;
-    }
-  };
-
-  /**
-   * Remove a component from an existing Entity
-   * @param {any} entityId - Entity Id
-   * @param {string} ComponentName - Component to remove
-   * @returns {boolean} - True if successfull else false
-   */
-  const remove = (entityId, ComponentName) => {
-    return _storage.removeEntityComponent(entityId, ComponentName);
-  };
-
-  /**
-   * Register a new component type
-   * @param {object} componentSchema
-   * @returns {boolean} - True if successfull, else false
-   */
-  const register = (componentSchema) => {
-    if(!componentSchema.hasOwnProperty('name')) {
-      return false;
-    }
-    _log(`Registering ${componentSchema.name} Component`)
-    const data = componentSchema.data || {};
-    _registeredComponents.set(componentSchema.name, data);
-    return true;
-  };
-
-  const list = () => {
-    return new Map(_registeredComponents)
-  }
-
-  const isRegistered = (name) => {
-    return _registeredComponents.has(name);
-  }
-
-  return {
-    add,
-    remove,
-    register,
-    list,
-    isRegistered
-  };
+    return {
+        add,
+        remove,
+        register,
+        list,
+        isRegistered,
+        dump,
+        load
+    };
 };
 
 
@@ -649,52 +687,100 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const EntityManager = (storage) => {
-  const _storage = storage;
+    const _storage = storage;
 
-  /**
-   * Add a new entity
-   * @param {string} [id] - Entity Id
-   * @returns {string} - Entity Id
-   */
-  const add = (id) => {
-    const entity = id  || Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
-    _storage.addEntity(entity);
-    return entity;
-  };
+    /**
+     * Add a new entity
+     * @param {string} [id] - Entity Id
+     * @returns {string} - Entity Id
+     */
+    const add = (id) => {
+        const entity = id || Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+        _storage.addEntity(entity);
+        return entity;
+    };
 
-  /**
-   * Remove an entity
-   * @param {*} entity - Entity Id to remove
-   * @returns {boolean} - True if successful, else false
-   */
-  const remove = (entity) => {
-    return _storage.removeEntity(entity);
-  };
+    /**
+     * Remove an entity
+     * @param {*} entity - Entity Id to remove
+     * @returns {boolean} - True if successful, else false
+     */
+    const remove = (entity) => {
+        return _storage.removeEntity(entity);
+    };
 
-  /**
-   * Retrieve an entity
-   * @param {*} id - Entity Id
-   * @returns {*} - Entity Id if it exists. Undefined if it does not exists
-   */
-  const get = (id) => {
-    _storage.getEntity(id);
-    return id;
-  };
+    /**
+     * Retrieve an entity and its components
+     * @param {*} id - Entity Id
+     * @returns {{id:string, components: Map}} - Entity Object with id and components. Undefined if it does not exists
+     */
+    const get = (id) => {
+        const eid = _storage.getEntity(id);
+        if (typeof eid == 'undefined') {
+            return;
+        }
+        const components = _storage.getEntityComponents(eid)
+        return {
+            id: eid,
+            components: components
+        };
+    };
 
-  /**
-   * Retrieve all entities stored
-   * @returns {Iterator} - Iterator that list all entities
-   */
-  const list = () => {
-    return _storage.getEntities().values();
-  };
+    /**
+     * Retrieve all entities stored
+     * @returns {Iterator} - Iterator that list all entities
+     */
+    const list = () => {
+        return _storage.getEntities().values();
+    };
 
-  return {
-    add,
-    get,
-    list,
-    remove,
-  };
+    const dump = () => {
+        //dump entities
+        const data = {
+            entities: []
+        };
+        const entities = list();
+        for (let e of entities) {
+            const entity = get(e)
+            const c = []
+            entity['components'].forEach((data, name) => {
+                if (Object.keys(data).length === 0 && data.constructor === Object) {
+                    c.push({name})
+                } else {
+                    c.push({
+                        name: name,
+                        data: data
+                    })
+                }
+
+            })
+            const en = {
+                id: e,
+                components: c
+            }
+            data['entities'].push(en);
+        }
+        return data;
+    };
+
+    const load = (data) => {
+        if (!data.hasOwnProperty('entities')) {
+            return false
+        }
+        for (let e of data['entities']) {
+            add(e['id'])
+        }
+        return true;
+    }
+
+    return {
+        add,
+        get,
+        list,
+        remove,
+        dump,
+        load
+    };
 };
 
 
@@ -732,32 +818,61 @@ __webpack_require__.r(__webpack_exports__);
  */
 const Engine = ({storageType = 'MemoryStorage', mode = 'production', storageInstance = null, ...rest} = {}) => {
 
-  //get storage
-  console.log(`Starting Enki ECS Engine with ${storageType}`)
+    //get storage
+    console.log(`Starting Enki ECS Engine with ${storageType}`)
 
-  const verbose = mode == 'debug' ? true : false;
-  let storage = null;
-  if(storageType == 'custom') {
-    storage = storageInstance(verbose);
-  } else {
-    storage = _storage_index_js__WEBPACK_IMPORTED_MODULE_4__["Storage"][storageType](verbose);
-  }
+    const verbose = mode == 'debug' ? true : false;
+    let storage = null;
+    if (storageType == 'custom') {
+        storage = storageInstance(verbose);
+    } else {
+        storage = _storage_index_js__WEBPACK_IMPORTED_MODULE_4__["Storage"][storageType](verbose);
+    }
 
-  const entityMgr = Object(_entityManager_js__WEBPACK_IMPORTED_MODULE_0__["EntityManager"])(storage, verbose);
+    const entityMgr = Object(_entityManager_js__WEBPACK_IMPORTED_MODULE_0__["EntityManager"])(storage, verbose);
 
-  const componentMgr = Object(_componentManager_js__WEBPACK_IMPORTED_MODULE_1__["ComponentManager"])(storage, verbose);
+    const componentMgr = Object(_componentManager_js__WEBPACK_IMPORTED_MODULE_1__["ComponentManager"])(storage, verbose);
 
-  const systemMgr = Object(_systemManager_js__WEBPACK_IMPORTED_MODULE_2__["SystemManager"])(storage, verbose);
+    const systemMgr = Object(_systemManager_js__WEBPACK_IMPORTED_MODULE_2__["SystemManager"])(storage, verbose);
 
-  const templateMgr = Object(_templateManager__WEBPACK_IMPORTED_MODULE_3__["TemplateManager"])(entityMgr, componentMgr,verbose);
+    const templateMgr = Object(_templateManager__WEBPACK_IMPORTED_MODULE_3__["TemplateManager"])(entityMgr, componentMgr, verbose);
 
-  return {
-    EntityManager: entityMgr,
-    SystemManager: systemMgr,
-    ComponentManager: componentMgr,
-    TemplateManager: templateMgr,
-    Storage: storage
-  }
+    /**
+     * Dump the full state in an Object
+     * than can be serialised
+     * @return {{templates:Array,entities:Array,components:Array}} - dump of state
+     */
+    const dump = () => {
+        let dump = {}
+
+        dump = Object.assign(dump, templateMgr.dump());
+        dump = Object.assign(dump, entityMgr.dump());
+        dump = Object.assign(dump, componentMgr.dump());
+
+        return dump;
+    }
+
+    /**
+     * Load a given state
+     * @param data
+     * @return {boolean} - True if successful
+     */
+    const load = (data) => {
+        return templateMgr.load(data) &&
+                entityMgr.load(data) &&
+                componentMgr.load(data);
+    }
+
+
+    return {
+        EntityManager: entityMgr,
+        SystemManager: systemMgr,
+        ComponentManager: componentMgr,
+        TemplateManager: templateMgr,
+        Storage: storage,
+        dump,
+        load,
+    }
 
 }
 
@@ -870,7 +985,7 @@ const MemoryStorage = (verbose, state = {}) => {
      */
     const getEntityComponents = (entityId) => {
         _log(`Get Entity Components for ${entityId}`)
-        return EntityComponents.has(entityId) ? EntityComponents.get(entityId) : new Set();
+        return EntityComponents.has(entityId) ? EntityComponents.get(entityId) : new Map();
     }
 
     /**
@@ -1252,11 +1367,59 @@ const TemplateManager = (entityMgr, componentMgr, verbose) => {
         return _registeredTemplates.delete(templateName);
     }
 
+    /**
+     * Load several templates and entities in one go from an object
+     *
+     * @param {object} schema - Object
+     */
+    const load = (data) => {
+        try {
+            if(data.hasOwnProperty('templates')) {
+                // register all templates
+                _log('Loading templates')
+                for( let t of data['templates']) {
+                    register(t['name'], t['components'], new Map(Object.entries(t['defaultValues'])))
+                }
+            } else {
+                _log('Your object must contains a `templates` property');
+                return false
+            }
+        } catch(err) {
+            _log(err);
+            throw new Error('Not able to load templates because of malformed data.');
+        }
+        return true
+    }
+
+    /**
+     * Dump all templates and template entities into an object
+     */
+    const dump = () => {
+        const data = {
+            templates: [],
+        }
+
+        // dump templates
+        _registeredTemplates.forEach((t) => {
+
+            data['templates'].push({
+                name: t['name'],
+                components: t['components'],
+                defaultValues: Object.fromEntries(t['defaultValues'])
+            });
+        })
+
+        return data;
+
+    }
+
     return {
         list,
         register,
         create,
-        remove
+        remove,
+        dump,
+        load
     };
 };
 

@@ -802,6 +802,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
   function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
+  function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
   function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 
   function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -963,12 +965,88 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       return _registeredComponents.has(name);
     };
 
+    var dump = function dump() {
+      var res = [];
+
+      _registeredComponents.forEach(function (data, name) {
+        if (Object.keys(data).length === 0 && data.constructor === Object) {
+          res.push({
+            name: name
+          });
+        } else {
+          res.push({
+            name: name,
+            data: data
+          });
+        }
+      });
+
+      return {
+        components: res
+      };
+    };
+
+    var load = function load(data) {
+      if (!data.hasOwnProperty('components')) {
+        return false;
+      } //register all components
+
+
+      var _iterator = _createForOfIteratorHelper(data['components']),
+          _step;
+
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var _c = _step.value;
+          register(_c);
+        } // add all components to dumped entities
+
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+
+      if (data.hasOwnProperty('entities')) {
+        var _iterator2 = _createForOfIteratorHelper(data['entities']),
+            _step2;
+
+        try {
+          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+            var e = _step2.value;
+
+            var _iterator3 = _createForOfIteratorHelper(e['components']),
+                _step3;
+
+            try {
+              for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+                var c = _step3.value;
+                add(e['id'], c['name'], c['data']);
+              }
+            } catch (err) {
+              _iterator3.e(err);
+            } finally {
+              _iterator3.f();
+            }
+          }
+        } catch (err) {
+          _iterator2.e(err);
+        } finally {
+          _iterator2.f();
+        }
+      }
+
+      return true;
+    };
+
     return {
       add: add,
       remove: remove,
       register: register,
       list: list,
-      isRegistered: isRegistered
+      isRegistered: isRegistered,
+      dump: dump,
+      load: load
     };
   };
 
@@ -999,6 +1077,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
   });
   _exports.EntityManager = void 0;
 
+  function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+  function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+  function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
   var EntityManager = function EntityManager(storage) {
     var _storage = storage;
     /**
@@ -1025,16 +1109,25 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       return _storage.removeEntity(entity);
     };
     /**
-     * Retrieve an entity
+     * Retrieve an entity and its components
      * @param {*} id - Entity Id
-     * @returns {*} - Entity Id if it exists. Undefined if it does not exists
+     * @returns {{id:string, components: Map}} - Entity Object with id and components. Undefined if it does not exists
      */
 
 
     var get = function get(id) {
-      _storage.getEntity(id);
+      var eid = _storage.getEntity(id);
 
-      return id;
+      if (typeof eid == 'undefined') {
+        return;
+      }
+
+      var components = _storage.getEntityComponents(eid);
+
+      return {
+        id: eid,
+        components: components
+      };
     };
     /**
      * Retrieve all entities stored
@@ -1046,11 +1139,81 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
       return _storage.getEntities().values();
     };
 
+    var dump = function dump() {
+      //dump entities
+      var data = {
+        entities: []
+      };
+      var entities = list();
+
+      var _iterator = _createForOfIteratorHelper(entities),
+          _step;
+
+      try {
+        var _loop = function _loop() {
+          var e = _step.value;
+          var entity = get(e);
+          var c = [];
+          entity['components'].forEach(function (data, name) {
+            if (Object.keys(data).length === 0 && data.constructor === Object) {
+              c.push({
+                name: name
+              });
+            } else {
+              c.push({
+                name: name,
+                data: data
+              });
+            }
+          });
+          var en = {
+            id: e,
+            components: c
+          };
+          data['entities'].push(en);
+        };
+
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          _loop();
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+
+      return data;
+    };
+
+    var load = function load(data) {
+      if (!data.hasOwnProperty('entities')) {
+        return false;
+      }
+
+      var _iterator2 = _createForOfIteratorHelper(data['entities']),
+          _step2;
+
+      try {
+        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+          var e = _step2.value;
+          add(e['id']);
+        }
+      } catch (err) {
+        _iterator2.e(err);
+      } finally {
+        _iterator2.f();
+      }
+
+      return true;
+    };
+
     return {
       add: add,
       get: get,
       list: list,
-      remove: remove
+      remove: remove,
+      dump: dump,
+      load: load
     };
   };
 
@@ -1119,12 +1282,38 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     var componentMgr = (0, _componentManager.ComponentManager)(storage, verbose);
     var systemMgr = (0, _systemManager.SystemManager)(storage, verbose);
     var templateMgr = (0, _templateManager.TemplateManager)(entityMgr, componentMgr, verbose);
+    /**
+     * Dump the full state in an Object
+     * than can be serialised
+     * @return {{templates:Array,entities:Array,components:Array}} - dump of state
+     */
+
+    var dump = function dump() {
+      var dump = {};
+      dump = Object.assign(dump, templateMgr.dump());
+      dump = Object.assign(dump, entityMgr.dump());
+      dump = Object.assign(dump, componentMgr.dump());
+      return dump;
+    };
+    /**
+     * Load a given state
+     * @param data
+     * @return {boolean} - True if successful
+     */
+
+
+    var load = function load(data) {
+      return templateMgr.load(data) && entityMgr.load(data) && componentMgr.load(data);
+    };
+
     return {
       EntityManager: entityMgr,
       SystemManager: systemMgr,
       ComponentManager: componentMgr,
       TemplateManager: templateMgr,
-      Storage: storage
+      Storage: storage,
+      dump: dump,
+      load: load
     };
   };
 
@@ -1294,7 +1483,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
     var getEntityComponents = function getEntityComponents(entityId) {
       _log("Get Entity Components for ".concat(entityId));
 
-      return EntityComponents.has(entityId) ? EntityComponents.get(entityId) : new Set();
+      return EntityComponents.has(entityId) ? EntityComponents.get(entityId) : new Map();
     };
     /**
      * List all entities that have the component attached
@@ -1824,12 +2013,73 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
       return _registeredTemplates["delete"](templateName);
     };
+    /**
+     * Load several templates and entities in one go from an object
+     *
+     * @param {object} schema - Object
+     */
+
+
+    var load = function load(data) {
+      try {
+        if (data.hasOwnProperty('templates')) {
+          // register all templates
+          _log('Loading templates');
+
+          var _iterator3 = _createForOfIteratorHelper(data['templates']),
+              _step3;
+
+          try {
+            for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+              var t = _step3.value;
+              register(t['name'], t['components'], new Map(Object.entries(t['defaultValues'])));
+            }
+          } catch (err) {
+            _iterator3.e(err);
+          } finally {
+            _iterator3.f();
+          }
+        } else {
+          _log('Your object must contains a `templates` property');
+
+          return false;
+        }
+      } catch (err) {
+        _log(err);
+
+        throw new Error('Not able to load templates because of malformed data.');
+      }
+
+      return true;
+    };
+    /**
+     * Dump all templates and template entities into an object
+     */
+
+
+    var dump = function dump() {
+      var data = {
+        templates: []
+      }; // dump templates
+
+      _registeredTemplates.forEach(function (t) {
+        data['templates'].push({
+          name: t['name'],
+          components: t['components'],
+          defaultValues: Object.fromEntries(t['defaultValues'])
+        });
+      });
+
+      return data;
+    };
 
     return {
       list: list,
       register: register,
       create: create,
-      remove: remove
+      remove: remove,
+      dump: dump,
+      load: load
     };
   };
 
