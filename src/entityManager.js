@@ -56,20 +56,44 @@ export const EntityManager = (storage) => {
         const entities = list();
         for (let e of entities) {
             const entity = get(e)
+            const c = []
+            entity['components'].forEach((data, name) => {
+                if (Object.keys(data).length === 0 && data.constructor === Object) {
+                    c.push({name})
+                } else {
+                    c.push({
+                        name: name,
+                        data: data
+                    })
+                }
+
+            })
             const en = {
                 id: e,
-                components: Array.from(entity['components'].values())
+                components: c
             }
             data['entities'].push(en);
         }
         return data;
     };
 
+    const load = (data) => {
+        if (!data.hasOwnProperty('entities')) {
+            return false
+        }
+        for (let e of data['entities']) {
+            console.log(e)
+            add(e['id'])
+        }
+        return true;
+    }
+
     return {
         add,
         get,
         list,
         remove,
-        dump
+        dump,
+        load
     };
 };

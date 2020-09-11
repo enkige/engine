@@ -1,30 +1,42 @@
 import {EntityManager} from '../src/entityManager';
 
+let _entity = new Set();
 const mockStorage = {
-    _entity: new Set(),
+
     addEntity: jest.fn((id) => {
-        mockStorage._entity.add(id);
+        console.log('added entity '+id)
+        _entity.add(id);
     }),
     removeEntity: jest.fn(() => {
         return true;
     }),
     getEntity: jest.fn((id) => {
-        if(mockStorage._entity.has(id)) return id;
+        if(_entity.has(id)) return id;
     }),
     getEntities: jest.fn(() => {
-        return mockStorage._entity
+        return new Set(_entity);
     }),
     addEntityComponent: jest.fn(),
     removeEntityComponent: jest.fn(),
     getEntityByComponents: jest.fn(),
-    getEntityComponents: jest.fn(() => {return new Set()})
+    getEntityComponents: jest.fn((id) => {
+        if(id == 'test') {
+            const c = new Map()
+            c.set('test',{test:'this is a test'})
+            c.set('flag',{})
+            return c;
+        } else {
+            return new Map()
+        }
+
+    })
 }
 
 describe('Entity Manager', () => {
 
     it('Initialise Entity Manager return an object of functions', () => {
         const em = EntityManager(mockStorage,false);
-        mockStorage._entity = new Set()
+        _entity = new Set()
         expect(em).toHaveProperty('add');
         expect(em).toHaveProperty('get');
         expect(em).toHaveProperty('list');
@@ -34,7 +46,7 @@ describe('Entity Manager', () => {
 
     it('add an entity', () => {
         const em = EntityManager(mockStorage,false);
-        mockStorage._entity = new Set()
+        _entity = new Set()
         const e = em.add();
         expect(mockStorage.addEntity).toHaveBeenCalledWith(e);
 
@@ -45,16 +57,16 @@ describe('Entity Manager', () => {
 
     it('gets entity by id', () => {
         const em = EntityManager(mockStorage,false);
-        mockStorage._entity = new Set()
+        _entity = new Set()
         const e = em.add();
-        expect(em.get(e)).toEqual({id:e, components: new Set()});
+        expect(em.get(e)).toEqual({id:e, components: new Map()});
         expect(em.get(1234)).toBeUndefined()
 
     })
 
     it('lists all entities', () => {
         const em = EntityManager(mockStorage,false);
-        mockStorage._entity = new Set()
+        _entity = new Set()
         em.add('test');
         em.add('test2');
         const res = em.list();
@@ -64,23 +76,31 @@ describe('Entity Manager', () => {
 
     it('removes entity', () => {
         const em = EntityManager(mockStorage,false);
-        mockStorage._entity = new Set()
+        _entity = new Set()
         const res =  em.remove(1);
         expect(mockStorage.removeEntity).toHaveBeenCalledWith(1);
         expect(res).toBe(true);
     })
 
-    it('dumps entities', () => {
+    it('dumps and loads entities', () => {
         const em = EntityManager(mockStorage,false);
-        mockStorage._entity = new Set()
+        _entity = new Set()
         em.add('test');
         em.add('test2');
 
         const expected =  {
-                entities: [ { id: 'test', components: [] }, { id: 'test2', components: [] } ]
+                entities: [ { id: 'test', components: [{name:'test',data:{test:'this is a test'}},{name:'flag'}] }, { id: 'test2', components: [] } ]
             }
         ;
-        expect(em.dump()).toEqual(expected);
+        const dump = em.dump();
+        expect(dump).toEqual(expected);
+        const em2 = EntityManager(mockStorage,false);
+        _entity = new Set()
+        expect(em2.load(1234)).toBe(false);
+        expect(em2.load(dump)).toBe(true);
+        const list = em2.list()
+        expect(list.next().value).toEqual('test')
+        expect(list.next().value).toEqual('test2')
     })
 
 })
