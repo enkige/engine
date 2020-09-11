@@ -4,7 +4,6 @@ let _entity = new Set();
 const mockStorage = {
 
     addEntity: jest.fn((id) => {
-        console.log('added entity '+id)
         _entity.add(id);
     }),
     removeEntity: jest.fn(() => {

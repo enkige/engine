@@ -82,7 +82,6 @@ export const EntityManager = (storage) => {
             return false
         }
         for (let e of data['entities']) {
-            console.log(e)
             add(e['id'])
         }
         return true;
