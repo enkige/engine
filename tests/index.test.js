@@ -5,7 +5,9 @@ const mockStorage = (verbose) => {
         addEntity: jest.fn(),
         removeEntity: jest.fn(),
         getEntity: jest.fn(),
-        getEntities: jest.fn(),
+        getEntities: jest.fn(() => {
+            return new Set()
+        }),
         addEntityComponent: jest.fn(),
         removeEntityComponent: jest.fn(),
         getEntityByComponents: jest.fn(),
@@ -20,6 +22,8 @@ test('initialise EnkiEngine with default storage', () => {
     expect(eng.SystemManager).toBeDefined();
     expect(eng.Storage).toBeDefined();
     expect(eng.TemplateManager).toBeDefined();
+    expect(eng.dump).toBeDefined();
+    expect(eng.load).toBeDefined();
 })
 
 test('initialise EnkiEngine with custom storage', () => {
@@ -30,4 +34,11 @@ test('initialise EnkiEngine with custom storage', () => {
     expect(eng.Storage).toBeDefined();
     expect(eng.TemplateManager).toBeDefined();
 
+})
+
+test('dump and load state', () => {
+    const eng = EnkiEngine({storageType: 'custom', storageInstance: mockStorage});
+    const dump = eng.dump()
+    expect(dump).toEqual( { templates: [], entities: [], components: [] })
+    expect(eng.load(dump)).toBe(true)
 })
