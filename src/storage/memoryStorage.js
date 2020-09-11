@@ -72,7 +72,7 @@ export const MemoryStorage = (verbose, state = {}) => {
      */
     const getEntityComponents = (entityId) => {
         _log(`Get Entity Components for ${entityId}`)
-        return EntityComponents.has(entityId) ? EntityComponents.get(entityId) : new Set();
+        return EntityComponents.has(entityId) ? EntityComponents.get(entityId) : new Map();
     }
 
     /**

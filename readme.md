@@ -110,7 +110,6 @@ You could set them up with the Entity and Component Manager or you can create a 
 See the full example ['./examples/three.js/template_example.html']('./examples/three.js/template_example.html') and
  compare it with non template code ['./examples/three.js/index.html']('./examples/three.js/index.html')
     
-
 ### Create a System
 
 A system is a simple javascript native function that return an object with two functions:
@@ -204,6 +203,26 @@ Here is a full example that trigger a click event with some user input and only 
     
      
 
+    
+### Saving and loading state
+
+The Engine expose two functions at its core to dump a given state and load it. 
+These functions can only dump components with pure data. Components that contains functions or complex object may not be dumped.
+
+To save a state and load a state you can use the following: 
+    
+    const eng = EnkiEngine();
+    const state = eng.dump()
+    eng.load(state)
+    
+An example to save the state in session storage of the browser would be as followed:
+    
+    const eng = EnkiEngine();
+    const state = eng.dump()
+    const myStorage = window.sessionStorage;
+    myStorage.setItem('EnkiState',json.stringify(state))
+    const stateToLoad = json.parse(myStorage.getItem('EnkiState'))
+    eng.load(stateToLoad)
     
 ### Creating a custom Storage Instance
 

@@ -56,6 +56,9 @@ describe('Memory Storage Component', () => {
             const com = mem.getEntityComponents(2)
             expect(com.has('test')).toBe(true);
             expect(com.get('test')).toEqual({x:2})
+
+            mem.addEntity(3);
+            expect(mem.getEntityComponents(3)).toEqual(new Map());
         })
 
         it('retrieves entities by components', () => {

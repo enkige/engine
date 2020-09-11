@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.3.0
+
+* Add dump and load of engine state
+
 ## Version 0.2.0
 
 * Add Template feature
