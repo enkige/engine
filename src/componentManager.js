@@ -115,8 +115,8 @@ export const ComponentManager = (storage, verbose) => {
 
     const dump = () => {
         const res = []
-        _registeredComponents.forEach((data,name) => {
-            if(Object.keys(data).length === 0 && data.constructor === Object) {
+        _registeredComponents.forEach((data, name) => {
+            if (Object.keys(data).length === 0 && data.constructor === Object) {
                 res.push({name})
             } else {
                 res.push({
@@ -129,12 +129,33 @@ export const ComponentManager = (storage, verbose) => {
         return {components: res};
     }
 
+    const load = (data) => {
+        if (!data.hasOwnProperty('components')) {
+            return false
+        }
+        //register all components
+        for (let c of data['components']) {
+            register(c)
+        }
+        
+        // add all components to dumped entities
+        if (data.hasOwnProperty('entities')) {
+            for (let e of data['entities']) {
+                for (let c of e['components']) {
+                    add(e['id'], c['name'], c['data'])
+                }
+            }
+        }
+        return true
+    }
+
     return {
         add,
         remove,
         register,
         list,
         isRegistered,
-        dump
+        dump,
+        load
     };
 };

@@ -168,7 +168,7 @@ describe('Remove Component from Entity', () => {
 })
 
 describe('dump registered components', () => {
-    it('dumps components into an object', () => {
+    it('dumps and loads components', () => {
         const cm = ComponentManager(mockStorage,false)
         cm.register({name:'Empty'})
         //'types: string', 'number', 'array', 'enum', 'any'
@@ -191,8 +191,18 @@ describe('dump registered components', () => {
                 component
             ]
         }
-        const res =  cm.dump();
-        expect(cm.dump()).toEqual(result)
+        const dump =  cm.dump();
+        expect(dump).toEqual(result)
+
+        //add entity component to dump manually
+        dump['entities'] = [
+            {id: 'test', components: [{name: 'Empty'}]}
+        ]
+
+        const cm2 = ComponentManager(mockStorage,false)
+        expect(cm2.load(123)).toBe(false)
+        expect(cm2.load(dump)).toBe(true);
+
     })
 
 
